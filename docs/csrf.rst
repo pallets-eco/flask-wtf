@@ -36,7 +36,7 @@ Like other Flask extensions, you can apply it lazily::
 
 .. warning::
 
-    Make sure your webserver cache policy wont't interfere with the CSRF protection.
+    Make sure your webserver cache policy won't interfere with the CSRF protection.
     If pages are cached longer than the ``WTF_CSRF_TIME_LIMIT`` value, then user browsers
     may serve cached page including expired CSRF token, resulting in random *Invalid*
     or *Expired* CSRF errors.
