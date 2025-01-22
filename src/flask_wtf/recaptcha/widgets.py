@@ -6,7 +6,7 @@ from markupsafe import Markup
 RECAPTCHA_SCRIPT_DEFAULT = "https://www.google.com/recaptcha/api.js"
 RECAPTCHA_DIV_CLASS_DEFAULT = "g-recaptcha"
 RECAPTCHA_TEMPLATE = """
-<script src='%s' async defer></script>
+<script src="%s" async defer></script>
 <div class="%s" %s></div>
 """
 

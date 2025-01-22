@@ -1,3 +1,4 @@
+import os
 from collections import abc
 
 from werkzeug.datastructures import FileStorage
@@ -12,13 +13,15 @@ class FileField(_FileField):
     """Werkzeug-aware subclass of :class:`wtforms.fields.FileField`."""
 
     def process_formdata(self, valuelist):
-        valuelist = (x for x in valuelist if isinstance(x, FileStorage) and x)
-        data = next(valuelist, None)
+        valid_files = (
+            file for file in valuelist if file and isinstance(file, FileStorage)
+        )
+        data = next(valid_files, None)
 
         if data is not None:
             self.data = data
         else:
-            self.raw_data = ()
+            self.raw_data = []
 
 
 class MultipleFileField(_MultipleFileField):
@@ -28,13 +31,14 @@ class MultipleFileField(_MultipleFileField):
     """
 
     def process_formdata(self, valuelist):
-        valuelist = (x for x in valuelist if isinstance(x, FileStorage) and x)
-        data = list(valuelist) or None
+        valid_files = [
+            file for file in valuelist if file and isinstance(file, FileStorage)
+        ]
 
-        if data is not None:
-            self.data = data
+        if valid_files:
+            self.data = valid_files
         else:
-            self.raw_data = ()
+            self.raw_data = []
 
 
 class FileRequired(DataRequired):
@@ -49,7 +53,8 @@ class FileRequired(DataRequired):
     def __call__(self, form, field):
         field_data = [field.data] if not isinstance(field.data, list) else field.data
         if not (
-            all(isinstance(x, FileStorage) and x for x in field_data) and field_data
+            field_data
+            and all((file and isinstance(file, FileStorage)) for file in field_data)
         ):
             raise StopValidation(
                 self.message or field.gettext("This field is required.")
@@ -75,9 +80,10 @@ class FileAllowed:
         self.message = message
 
     def __call__(self, form, field):
-        field_data = [field.data] if not isinstance(field.data, list) else field.data
+        field_data = field.data if isinstance(field.data, list) else [field.data]
         if not (
-            all(isinstance(x, FileStorage) and x for x in field_data) and field_data
+            field_data
+            and all(file and isinstance(file, FileStorage) for file in field_data)
         ):
             return
 
@@ -85,7 +91,7 @@ class FileAllowed:
 
         for filename in filenames:
             if isinstance(self.upload_set, abc.Iterable):
-                if any(filename.endswith("." + x) for x in self.upload_set):
+                if any(filename.endswith(f".{x}") for x in self.upload_set):
                     continue
 
                 raise StopValidation(
@@ -122,15 +128,18 @@ class FileSize:
         self.message = message
 
     def __call__(self, form, field):
-        field_data = [field.data] if not isinstance(field.data, list) else field.data
+        field_data = field.data if isinstance(field.data, list) else [field.data]
         if not (
-            all(isinstance(x, FileStorage) and x for x in field_data) and field_data
+            field_data
+            and all(file and isinstance(file, FileStorage) for file in field_data)
         ):
             return
 
         for f in field_data:
-            file_size = len(f.read())
-            f.seek(0)  # reset cursor position to beginning of file
+            initial_pos = f.stream.tell()
+            f.stream.seek(0, os.SEEK_END)
+            file_size = f.stream.tell()
+            f.stream.seek(initial_pos)
 
             if (file_size < self.min_size) or (file_size > self.max_size):
                 # the file is too small or too big => validation failure
