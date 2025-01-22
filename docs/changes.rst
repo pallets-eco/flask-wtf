@@ -1,6 +1,10 @@
 Changes
 =======
 
+- Improve HTML formatting of the REcaptcha widget.
+- Don't load the whole file into memory for FileSize, use tell() instead.
+- Randomly generate a CSRF token over using hashing.
+
 Version 1.2.2
 -------------
 
