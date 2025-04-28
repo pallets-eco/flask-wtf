@@ -34,6 +34,13 @@ Like other Flask extensions, you can apply it lazily::
     this will use the Flask app's ``SECRET_KEY``. If you'd like to use a
     separate token you can set ``WTF_CSRF_SECRET_KEY``.
 
+.. warning::
+
+    Make sure your webserver cache policy wont't interfere with the CSRF protection.
+    If pages are cached longer than the ``WTF_CSRF_TIME_LIMIT`` value, then user browsers
+    may serve cached page including expired CSRF token, resulting in random *Invalid*
+    or *Expired* CSRF errors.
+
 HTML Forms
 ----------
 
@@ -72,6 +79,14 @@ For example, in jQuery you can configure all requests to send the token.
                 }
             }
         });
+    </script>
+
+In Axios you can set the header for all requests with ``axios.defaults.headers.common``.
+
+.. sourcecode:: html+jinja
+
+    <script type="text/javascript">
+        axios.defaults.headers.common["X-CSRFToken"] = "{{ csrf_token() }}";
     </script>
 
 Customize the error response

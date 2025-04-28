@@ -71,7 +71,7 @@ would look like this:
 
     {% if form.name.errors %}
         <ul class="errors">
-        {% for error in form.name %}
+        {% for error in form.name.errors %}
             <li>{{ error }}</li>
         {% endfor %}
         </ul>

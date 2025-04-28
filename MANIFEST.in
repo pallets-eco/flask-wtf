@@ -1,9 +1,8 @@
-include AUTHORS LICENSE test-requirements.txt tox.ini
-graft tests
-recursive-exclude tests *.pyc
-recursive-exclude tests *.pyo
+include tox.ini
+include requirements/*.txt
+include CONTRIBUTING.rst
 graft docs
 prune docs/_build
-exclude docs/_themes/.git*
-recursive-exclude docs *.pyc
-recursive-exclude docs *.pyo
+graft examples
+graft tests
+global-exclude *.pyc

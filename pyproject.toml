@@ -1,0 +1,96 @@
+[project]
+name = "Flask-WTF"
+description = "Form rendering, validation, and CSRF protection for Flask with WTForms."
+readme = "README.rst"
+license = {file = "LICENSE.rst"}
+maintainers = [{name = "WTForms"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "Flask",
+    "WTForms",
+    "itsdangerous",
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://flask-wtf.readthedocs.io/"
+Changes = "https://flask-wtf.readthedocs.io/changes/"
+"Source Code" = "https://github.com/pallets-eco/flask-wtf/"
+"Issue Tracker" = "https://github.com/pallets-eco/flask-wtf/issues/"
+Chat = "https://discord.gg/pallets"
+
+[project.optional-dependencies]
+email = ["email_validator"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/flask_wtf"]
+
+[tool.hatch.version]
+path = "src/flask_wtf/__init__.py"
+
+[tool.hatch.build]
+include = [
+    "src/",
+    "docs/",
+    "tests/",
+    "CHANGES.rst",
+    "tox.ini",
+]
+exclude = [
+    "docs/_build/",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "error",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["flask_wtf", "tests"]
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "except ImportError:",
+]
+
+[tool.ruff]
+src = ["src"]
+fix = true
+show-fixes = true
+output-format = "full"
+
+[tool.ruff.lint]
+select = [
+    "B",  # flake8-bugbear
+    "E",  # pycodestyle error
+    "F",  # pyflakes
+    "I",  # isort
+    "UP",  # pyupgrade
+    "W",  # pycodestyle warning
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+order-by-type = false

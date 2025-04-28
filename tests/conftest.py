@@ -8,7 +8,7 @@ class Flask(_Flask):
 
     def make_response(self, rv):
         if rv is None:
-            rv = ''
+            rv = ""
 
         return super().make_response(rv)
 
@@ -19,13 +19,13 @@ def app():
     return app
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def app_ctx(app):
     with app.app_context() as ctx:
         yield ctx
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def req_ctx(app):
     with app.test_request_context() as ctx:
         yield ctx
