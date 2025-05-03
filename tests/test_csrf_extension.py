@@ -141,6 +141,18 @@ def test_manual_protect(app, csrf, client):
     assert response.status_code == 400
 
 
+def test_exempt_with_manual_protect(app, csrf, client):
+    app.config["WTF_CSRF_CHECK_DEFAULT"] = False
+
+    @app.route("/manual", methods=["POST"])
+    @csrf.exempt
+    def manual():
+        csrf.protect(respect_exempts=True)
+
+    response = client.post("/manual")
+    assert response.status_code == 200
+
+
 def test_exempt_blueprint(app, csrf, client):
     bp = Blueprint("exempt", __name__, url_prefix="/exempt")
     csrf.exempt(bp)
