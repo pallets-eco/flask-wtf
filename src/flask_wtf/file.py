@@ -1,4 +1,5 @@
 from collections import abc
+from io import BytesIO
 
 from werkzeug.datastructures import FileStorage
 from wtforms import FileField as _FileField
@@ -129,8 +130,17 @@ class FileSize:
             return
 
         for f in field_data:
-            file_size = len(f.read())
-            f.seek(0)  # reset cursor position to beginning of file
+            if isinstance(f.stream, BytesIO):
+                file_size = f.getbuffer().nbytes
+            elif f.seekable():
+                file_size = f.seek(0, 2)
+                f.seek(0)
+            else:
+                file_size = len(f.read())
+                try:
+                    f.seek(0)  # reset cursor position to beginning of file
+                except OSError:
+                    pass  # welp we broke it
 
             if (file_size < self.min_size) or (file_size > self.max_size):
                 # the file is too small or too big => validation failure

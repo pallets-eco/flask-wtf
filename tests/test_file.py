@@ -102,6 +102,25 @@ def test_file_size_small_file_passes_validation(form, tmp_path):
         assert f.validate()
 
 
+def test_file_size_bytesio_passes_validation(form):
+    from io import BytesIO
+
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    contents = BytesIO(b"small")
+    f = form(file=FileStorage(contents, filename="bytes"))
+    assert f.validate()
+
+
+def test_file_size_bytesio_too_big_fails_validation(form):
+    from io import BytesIO
+
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    contents = BytesIO(b"small" * 30)
+    f = form(file=FileStorage(contents, filename="bytes"))
+    assert not f.validate()
+    assert f.file.errors[0] == "File must be between 0 and 100 bytes."
+
+
 @pytest.mark.parametrize(
     "min_size, max_size, invalid_file_size", [(1, 100, 0), (0, 100, 101)]
 )
