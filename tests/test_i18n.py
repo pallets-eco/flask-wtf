@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import pytest
+from flask import Flask
 from flask import request
+from flask.testing import FlaskClient
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
@@ -16,17 +20,17 @@ class NameForm(FlaskForm):
     name = StringField(validators=[DataRequired(), Length(min=8)])
 
 
-def test_no_extension(app, client):
+def test_no_extension(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = NameForm()
+        form: NameForm = NameForm()
         form.validate()
         assert form.name.errors[0] == "This field is required."
 
     client.post("/", headers={"Accept-Language": "zh-CN,zh;q=0.8"})
 
 
-def test_i18n(app, client):
+def test_i18n(app: Flask, client: FlaskClient) -> None:
     try:
         from flask_babel import Babel
     except ImportError:
@@ -39,7 +43,7 @@ def test_i18n(app, client):
 
     @app.route("/", methods=["POST"])
     def index():
-        form = NameForm()
+        form: NameForm = NameForm()
         form.validate()
 
         if not app.config.get("WTF_I18N_ENABLED", True):
@@ -55,7 +59,7 @@ def test_i18n(app, client):
     client.post("/", headers={"Accept-Language": "zh"})
 
 
-def test_outside_request():
+def test_outside_request() -> None:
     pytest.importorskip("babel")
     from flask_wtf.i18n import translations
 

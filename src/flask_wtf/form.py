@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import collections.abc as cabc
+import typing as t
+
 from flask import current_app
 from flask import request
 from flask import session
@@ -30,26 +35,30 @@ class FlaskForm(Form):
     """
 
     class Meta(DefaultMeta):
-        csrf_class = _FlaskFormCSRF
-        csrf_context = session  # not used, provided for custom csrf_class
+        csrf_class: type[_FlaskFormCSRF] = _FlaskFormCSRF
+        csrf_context: t.Any = session  # not used, provided for custom csrf_class
 
         @cached_property
-        def csrf(self):
+        def csrf(self) -> bool:
             return current_app.config.get("WTF_CSRF_ENABLED", True)
 
         @cached_property
-        def csrf_secret(self):
+        def csrf_secret(self) -> str:
             return current_app.config.get("WTF_CSRF_SECRET_KEY", current_app.secret_key)
 
         @cached_property
-        def csrf_field_name(self):
+        def csrf_field_name(self) -> str:
             return current_app.config.get("WTF_CSRF_FIELD_NAME", "csrf_token")
 
         @cached_property
-        def csrf_time_limit(self):
+        def csrf_time_limit(self) -> int:
             return current_app.config.get("WTF_CSRF_TIME_LIMIT", 3600)
 
-        def wrap_formdata(self, form, formdata):
+        def wrap_formdata(
+            self,
+            form: FlaskForm,
+            formdata: object | CombinedMultiDict | ImmutableMultiDict | None,
+        ) -> CombinedMultiDict | ImmutableMultiDict | None:
             if formdata is _Auto:
                 if _is_submitted():
                     if request.files:
@@ -63,29 +72,31 @@ class FlaskForm(Form):
 
             return formdata
 
-        def get_translations(self, form):
+        def get_translations(self, form: FlaskForm) -> t.Any | None:
             if not current_app.config.get("WTF_I18N_ENABLED", True):
                 return super().get_translations(form)
 
             return translations
 
-    def __init__(self, formdata=_Auto, **kwargs):
+    def __init__(self, formdata: t.Any = _Auto, **kwargs: t.Any) -> None:
         super().__init__(formdata=formdata, **kwargs)
 
-    def is_submitted(self):
+    def is_submitted(self) -> bool:
         """Consider the form submitted if there is an active request and
         the method is ``POST``, ``PUT``, ``PATCH``, or ``DELETE``.
         """
 
         return _is_submitted()
 
-    def validate_on_submit(self, extra_validators=None):
+    def validate_on_submit(
+        self, extra_validators: dict[str, t.Any] | None = None
+    ) -> bool:
         """Call :meth:`validate` only if the form is submitted.
         This is a shortcut for ``form.is_submitted() and form.validate()``.
         """
         return self.is_submitted() and self.validate(extra_validators=extra_validators)
 
-    def hidden_tag(self, *fields):
+    def hidden_tag(self, *fields: str | t.Any) -> Markup:
         """Render the form's hidden fields in one call.
 
         A field is considered hidden if it uses the
@@ -106,7 +117,7 @@ class FlaskForm(Form):
            Skip passed names that don't exist.
         """
 
-        def hidden_fields(fields):
+        def hidden_fields(fields: tuple | list) -> cabc.Generator[t.Any, None, None]:
             for f in fields:
                 if isinstance(f, str):
                     f = getattr(self, f, None)
@@ -119,7 +130,7 @@ class FlaskForm(Form):
         return Markup("\n".join(str(f) for f in hidden_fields(fields or self)))
 
 
-def _is_submitted():
+def _is_submitted() -> bool:
     """Consider the form submitted if there is an active request and
     the method is ``POST``, ``PUT``, ``PATCH``, or ``DELETE``.
     """

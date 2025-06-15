@@ -1,4 +1,10 @@
+from __future__ import annotations
+
+from pathlib import Path
+
 import pytest
+from flask import Flask
+from flask.ctx import RequestContext
 from werkzeug.datastructures import FileStorage
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.datastructures import MultiDict
@@ -14,29 +20,30 @@ from flask_wtf.file import FileSize
 from flask_wtf.file import MultipleFileField
 
 
+class UploadForm(FlaskForm):
+    class Meta:
+        csrf = False
+
+    file = FileField()
+    files = MultipleFileField()
+
+
 @pytest.fixture
-def form(req_ctx):
-    class UploadForm(FlaskForm):
-        class Meta:
-            csrf = False
-
-        file = FileField()
-        files = MultipleFileField()
-
+def form(req_ctx: RequestContext) -> type[UploadForm]:
     return UploadForm
 
 
-def test_process_formdata(form):
+def test_process_formdata(form: type[UploadForm]) -> None:
     assert form(MultiDict((("file", FileStorage()),))).file.data is None
     assert (
         form(MultiDict((("file", FileStorage(filename="real")),))).file.data is not None
     )
 
 
-def test_file_required(form):
+def test_file_required(form: type[UploadForm]) -> None:
     form.file.kwargs["validators"] = [FileRequired()]
 
-    f = form()
+    f: UploadForm = form()
     assert not f.validate()
     assert f.file.errors[0] == "This field is required."
 
@@ -51,10 +58,10 @@ def test_file_required(form):
     assert f.validate()
 
 
-def test_file_allowed(form):
+def test_file_allowed(form: type[UploadForm]) -> None:
     form.file.kwargs["validators"] = [FileAllowed(("txt",))]
 
-    f = form()
+    f: UploadForm = form()
     assert f.validate()
 
     f = form(file=FileStorage(filename="test.txt"))
@@ -65,7 +72,7 @@ def test_file_allowed(form):
     assert f.file.errors[0] == "File does not have an approved extension: txt"
 
 
-def test_file_allowed_uploadset(app, form):
+def test_file_allowed_uploadset(app: Flask, form: type[UploadForm]) -> None:
     pytest.importorskip("flask_uploads")
     from flask_uploads import configure_uploads
     from flask_uploads import UploadSet
@@ -75,7 +82,7 @@ def test_file_allowed_uploadset(app, form):
     configure_uploads(app, (txt,))
     form.file.kwargs["validators"] = [FileAllowed(txt)]
 
-    f = form()
+    f: UploadForm = form()
     assert f.validate()
 
     f = form(file=FileStorage(filename="test.txt"))
@@ -86,19 +93,21 @@ def test_file_allowed_uploadset(app, form):
     assert f.file.errors[0] == "File does not have an approved extension."
 
 
-def test_file_size_no_file_passes_validation(form):
+def test_file_size_no_file_passes_validation(form: type[UploadForm]) -> None:
     form.file.kwargs["validators"] = [FileSize(max_size=100)]
-    f = form()
+    f: UploadForm = form()
     assert f.validate()
 
 
-def test_file_size_small_file_passes_validation(form, tmp_path):
+def test_file_size_small_file_passes_validation(
+    form: type[UploadForm], tmp_path: Path
+) -> None:
     form.file.kwargs["validators"] = [FileSize(max_size=100)]
     path = tmp_path / "test_file_smaller_than_max.txt"
     path.write_bytes(b"\0")
 
     with path.open("rb") as file:
-        f = form(file=FileStorage(file))
+        f: UploadForm = form(file=FileStorage(file))
         assert f.validate()
 
 
@@ -106,21 +115,25 @@ def test_file_size_small_file_passes_validation(form, tmp_path):
     "min_size, max_size, invalid_file_size", [(1, 100, 0), (0, 100, 101)]
 )
 def test_file_size_invalid_file_size_fails_validation(
-    form, min_size, max_size, invalid_file_size, tmp_path
-):
+    form: type[UploadForm],
+    min_size: int,
+    max_size: int,
+    invalid_file_size: int,
+    tmp_path: Path,
+) -> None:
     form.file.kwargs["validators"] = [FileSize(min_size=min_size, max_size=max_size)]
     path = tmp_path / "test_file_invalid_size.txt"
     path.write_bytes(b"\0" * invalid_file_size)
 
     with path.open("rb") as file:
-        f = form(file=FileStorage(file))
+        f: UploadForm = form(file=FileStorage(file))
         assert not f.validate()
         assert (
             f.file.errors[0] == f"File must be between {min_size} and {max_size} bytes."
         )
 
 
-def test_validate_base_field(req_ctx):
+def test_validate_base_field(req_ctx: RequestContext) -> None:
     class F(FlaskForm):
         class Meta:
             csrf = False
@@ -133,7 +146,7 @@ def test_validate_base_field(req_ctx):
     assert F(f=FileStorage(filename="real")).validate()
 
 
-def test_process_formdata_for_files(form):
+def test_process_formdata_for_files(form: type[UploadForm]) -> None:
     assert (
         form(
             ImmutableMultiDict([("files", FileStorage()), ("files", FileStorage())])
@@ -153,10 +166,10 @@ def test_process_formdata_for_files(form):
     )
 
 
-def test_files_required(form):
+def test_files_required(form: type[UploadForm]) -> None:
     form.files.kwargs["validators"] = [FileRequired()]
 
-    f = form()
+    f: UploadForm = form()
     assert not f.validate()
     assert f.files.errors[0] == "This field is required."
 
@@ -171,10 +184,10 @@ def test_files_required(form):
     assert f.validate()
 
 
-def test_files_allowed(form):
+def test_files_allowed(form: type[UploadForm]) -> None:
     form.files.kwargs["validators"] = [FileAllowed(("txt",))]
 
-    f = form()
+    f: UploadForm = form()
     assert f.validate()
 
     f = form(
@@ -187,7 +200,7 @@ def test_files_allowed(form):
     assert f.files.errors[0] == "File does not have an approved extension: txt"
 
 
-def test_files_allowed_uploadset(app, form):
+def test_files_allowed_uploadset(app: Flask, form: type[UploadForm]) -> None:
     pytest.importorskip("flask_uploads")
     from flask_uploads import configure_uploads
     from flask_uploads import UploadSet
@@ -197,7 +210,7 @@ def test_files_allowed_uploadset(app, form):
     configure_uploads(app, (txt,))
     form.files.kwargs["validators"] = [FileAllowed(txt)]
 
-    f = form()
+    f: UploadForm = form()
     assert f.validate()
 
     f = form(
@@ -210,7 +223,7 @@ def test_files_allowed_uploadset(app, form):
     assert f.files.errors[0] == "File does not have an approved extension."
 
 
-def test_validate_base_multiple_field(req_ctx):
+def test_validate_base_multiple_field(req_ctx: RequestContext) -> None:
     class F(FlaskForm):
         class Meta:
             csrf = False
@@ -222,13 +235,15 @@ def test_validate_base_multiple_field(req_ctx):
     assert F(f=[FileStorage(filename="real")]).validate()
 
 
-def test_file_size_small_files_pass_validation(form, tmp_path):
+def test_file_size_small_files_pass_validation(
+    form: type[UploadForm], tmp_path: Path
+) -> None:
     form.files.kwargs["validators"] = [FileSize(max_size=100)]
     path = tmp_path / "test_file_smaller_than_max.txt"
     path.write_bytes(b"\0")
 
     with path.open("rb") as file:
-        f = form(files=[FileStorage(file)])
+        f: UploadForm = form(files=[FileStorage(file)])
         assert f.validate()
 
 
@@ -236,14 +251,18 @@ def test_file_size_small_files_pass_validation(form, tmp_path):
     "min_size, max_size, invalid_file_size", [(1, 100, 0), (0, 100, 101)]
 )
 def test_file_size_invalid_file_sizes_fails_validation(
-    form, min_size, max_size, invalid_file_size, tmp_path
-):
+    form: type[UploadForm],
+    min_size: int,
+    max_size: int,
+    invalid_file_size: int,
+    tmp_path: Path,
+) -> None:
     form.files.kwargs["validators"] = [FileSize(min_size=min_size, max_size=max_size)]
     path = tmp_path / "test_file_invalid_size.txt"
     path.write_bytes(b"\0" * invalid_file_size)
 
     with path.open("rb") as file:
-        f = form(files=[FileStorage(file)])
+        f: UploadForm = form(files=[FileStorage(file)])
         assert not f.validate()
         assert (
             f.files.errors[0]
@@ -251,17 +270,19 @@ def test_file_size_invalid_file_sizes_fails_validation(
         )
 
 
-def test_files_length(form, min_num=2, max_num=3):
+def test_files_length(
+    form: type[UploadForm], min_num: int = 2, max_num: int = 3
+) -> None:
     form.files.kwargs["validators"] = [Length(min_num, max_num)]
 
-    f = form(files=[FileStorage("1")])
+    f: UploadForm = form(files=[FileStorage("1")])
     assert not f.validate()
     assert (
         f.files.errors[0]
         == f"Field must be between {min_num} and {max_num} characters long."
     )
 
-    f = form(
+    f: UploadForm = form(
         files=[
             FileStorage(filename="1"),
             FileStorage(filename="2"),

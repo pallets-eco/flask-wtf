@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 from io import BytesIO
 
+from flask import Flask
 from flask import json
 from flask import request
+from flask.ctx import RequestContext
+from flask.testing import FlaskClient
 from wtforms import FileField
 from wtforms import HiddenField
 from wtforms import IntegerField
@@ -20,56 +25,56 @@ class BasicForm(FlaskForm):
     avatar = FileField()
 
 
-def test_populate_from_form(app, client):
+def test_populate_from_form(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert form.name.data == "form"
 
     client.post("/", data={"name": "form"})
 
 
-def test_populate_from_files(app, client):
+def test_populate_from_files(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert form.avatar.data is not None
         assert form.avatar.data.filename == "flask.png"
 
     client.post("/", data={"name": "files", "avatar": (BytesIO(), "flask.png")})
 
 
-def test_populate_from_json(app, client):
+def test_populate_from_json(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert form.name.data == "json"
 
     client.post("/", data=json.dumps({"name": "json"}), content_type="application/json")
 
 
-def test_populate_manually(app, client):
+def test_populate_manually(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm(request.args)
+        form: BasicForm = BasicForm(request.args)
         assert form.name.data == "args"
 
     client.post("/", query_string={"name": "args"})
 
 
-def test_populate_none(app, client):
+def test_populate_none(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm(None)
+        form: BasicForm = BasicForm(None)
         assert form.name.data is None
 
     client.post("/", data={"name": "ignore"})
 
 
-def test_validate_on_submit(app, client):
+def test_validate_on_submit(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["POST"])
     def index():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert form.is_submitted()
         assert not form.validate_on_submit()
         assert "name" in form.errors
@@ -77,17 +82,17 @@ def test_validate_on_submit(app, client):
     client.post("/")
 
 
-def test_no_validate_on_get(app, client):
+def test_no_validate_on_get(app: Flask, client: FlaskClient) -> None:
     @app.route("/", methods=["GET", "POST"])
     def index():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert not form.validate_on_submit()
         assert "name" not in form.errors
 
     client.get("/")
 
 
-def test_hidden_tag(req_ctx):
+def test_hidden_tag(req_ctx: RequestContext) -> None:
     class F(BasicForm):
         class Meta:
             csrf = True
@@ -95,17 +100,17 @@ def test_hidden_tag(req_ctx):
         key = HiddenField()
         count = IntegerField(widget=HiddenInput())
 
-    f = F()
-    out = f.hidden_tag()
+    f: F = F()
+    out: str = f.hidden_tag()
     assert all(x in out for x in ("csrf_token", "count", "key"))
     assert "avatar" not in out
     assert "csrf_token" not in f.hidden_tag("count", "key")
 
 
-def test_set_default_message_language(app, client):
+def test_set_default_message_language(app: Flask, client: FlaskClient) -> None:
     @app.route("/default", methods=["POST"])
     def default():
-        form = BasicForm()
+        form: BasicForm = BasicForm()
         assert not form.validate_on_submit()
         assert "This field is required." in form.name.errors
 
@@ -121,7 +126,7 @@ def test_set_default_message_language(app, client):
         class NameForm(MyBaseForm):
             name = StringField(validators=[DataRequired()])
 
-        form = NameForm()
+        form: NameForm = NameForm()
         assert form.meta.locales == ["es"]
         assert not form.validate_on_submit()
         assert "Este campo es obligatorio." in form.name.errors

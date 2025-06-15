@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import pytest
+from flask import Flask
 from flask import g
 from flask import session
+from flask.ctx import AppContext
+from flask.ctx import RequestContext
+from flask.testing import FlaskClient
 from wtforms import ValidationError
 
 from flask_wtf import FlaskForm
@@ -8,7 +14,7 @@ from flask_wtf.csrf import generate_csrf
 from flask_wtf.csrf import validate_csrf
 
 
-def test_csrf_requires_secret_key(app, req_ctx):
+def test_csrf_requires_secret_key(app: Flask, req_ctx: RequestContext) -> None:
     # use secret key set by test setup
     generate_csrf()
     # fail with no key
@@ -22,27 +28,27 @@ def test_csrf_requires_secret_key(app, req_ctx):
     generate_csrf(secret_key="direct")
 
 
-def test_token_stored_by_generate(req_ctx):
+def test_token_stored_by_generate(req_ctx: RequestContext) -> None:
     generate_csrf()
     assert "csrf_token" in session
     assert "csrf_token" in g
 
 
-def test_custom_token_key(req_ctx):
+def test_custom_token_key(req_ctx: RequestContext) -> None:
     generate_csrf(token_key="oauth_token")
     assert "oauth_token" in session
     assert "oauth_token" in g
 
 
-def test_token_cached(req_ctx):
+def test_token_cached(req_ctx: RequestContext) -> None:
     assert generate_csrf() == generate_csrf()
 
 
-def test_validate(req_ctx):
+def test_validate(req_ctx: RequestContext) -> None:
     validate_csrf(generate_csrf())
 
 
-def test_validation_errors(req_ctx):
+def test_validation_errors(req_ctx: RequestContext) -> None:
     e = pytest.raises(ValidationError, validate_csrf, None)
     assert str(e.value) == "The CSRF token is missing."
 
@@ -61,10 +67,10 @@ def test_validation_errors(req_ctx):
     assert str(e.value) == "The CSRF tokens do not match."
 
 
-def test_form_csrf(app, client, app_ctx):
+def test_form_csrf(app: Flask, client: FlaskClient, app_ctx: AppContext) -> None:
     @app.route("/", methods=["GET", "POST"])
     def index():
-        f = FlaskForm()
+        f: FlaskForm = FlaskForm()
 
         if f.validate_on_submit():
             return "good"
@@ -84,12 +90,14 @@ def test_form_csrf(app, client, app_ctx):
     assert response.get_data(as_text=True) == "good"
 
 
-def test_validate_error_logged(req_ctx, monkeypatch):
+def test_validate_error_logged(
+    req_ctx: RequestContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
     from flask_wtf.csrf import logger
 
-    messages = []
+    messages: list[str] = []
 
-    def assert_info(message):
+    def assert_info(message: str) -> None:
         messages.append(message)
 
     monkeypatch.setattr(logger, "info", assert_info)

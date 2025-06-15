@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 import json
+import typing as t
 from urllib import request as http
 from urllib.parse import urlencode
 
 from flask import current_app
 from flask import request
+from wtforms import Form
 from wtforms import ValidationError
+
+if t.TYPE_CHECKING:
+    from .fields import RecaptchaField
 
 RECAPTCHA_VERIFY_SERVER_DEFAULT = "https://www.google.com/recaptcha/api/siteverify"
 RECAPTCHA_ERROR_CODES = {
@@ -21,12 +28,12 @@ __all__ = ["Recaptcha"]
 class Recaptcha:
     """Validates a ReCaptcha."""
 
-    def __init__(self, message=None):
+    def __init__(self, message: str | None = None) -> None:
         if message is None:
             message = RECAPTCHA_ERROR_CODES["missing-input-response"]
         self.message = message
 
-    def __call__(self, form, field):
+    def __call__(self, form: Form, field: RecaptchaField) -> bool:
         if current_app.testing:
             return True
 
@@ -43,7 +50,7 @@ class Recaptcha:
             field.recaptcha_error = "incorrect-captcha-sol"
             raise ValidationError(field.gettext(self.message))
 
-    def _validate_recaptcha(self, response, remote_addr):
+    def _validate_recaptcha(self, response: str, remote_addr: str) -> bool:
         """Performs the actual validation."""
         try:
             private_key = current_app.config["RECAPTCHA_PRIVATE_KEY"]

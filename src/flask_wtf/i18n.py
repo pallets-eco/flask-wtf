@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from babel import support
 from flask import current_app
 from flask import request
@@ -7,7 +9,7 @@ from wtforms.i18n import messages_path
 __all__ = ("Translations", "translations")
 
 
-def _get_translations():
+def _get_translations() -> support.NullTranslations | support.Translations | None:
     """Returns the correct gettext translations.
     Copy from flask-babel with some modifications.
     """
@@ -31,11 +33,11 @@ def _get_translations():
 
 
 class Translations:
-    def gettext(self, string):
+    def gettext(self, string: str) -> str:
         t = _get_translations()
         return string if t is None else t.ugettext(string)
 
-    def ngettext(self, singular, plural, n):
+    def ngettext(self, singular: str, plural: str, n: int) -> str:
         t = _get_translations()
 
         if t is None:
