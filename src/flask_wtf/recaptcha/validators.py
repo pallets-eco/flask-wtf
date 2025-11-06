@@ -19,7 +19,7 @@ __all__ = ["Recaptcha"]
 
 
 class Recaptcha:
-    """Validates a ReCaptcha. The field will always be valid if current_app.testing is True"""
+    """Validates a ReCaptcha."""
 
     def __init__(self, message=None):
         if message is None:
