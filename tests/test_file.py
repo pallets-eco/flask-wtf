@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import pytest
 from werkzeug.datastructures import FileStorage
 from werkzeug.datastructures import ImmutableMultiDict
@@ -100,6 +102,51 @@ def test_file_size_small_file_passes_validation(form, tmp_path):
     with path.open("rb") as file:
         f = form(file=FileStorage(file))
         assert f.validate()
+
+
+def test_file_size_bytesio_passes_validation(form):
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    contents = BytesIO(b"small")
+    f = form(file=FileStorage(contents, filename="bytes"))
+    assert f.validate()
+
+
+def test_file_size_bytesio_too_big_fails_validation(form):
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    contents = BytesIO(b"small" * 30)
+    f = form(file=FileStorage(contents, filename="bytes"))
+    assert not f.validate()
+    assert f.file.errors[0] == "File must be between 0 and 100 bytes."
+
+
+def test_file_size_seekable_file_passes_validation(form, tmp_path):
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    path = tmp_path / "test_seekable.txt"
+    path.write_bytes(b"test content")
+
+    with path.open("rb") as file:
+        file_storage = FileStorage(file, filename="test.txt")
+        f = form(file=file_storage)
+        assert f.validate()
+        assert file.tell() == 0
+
+
+def test_file_size_non_seekable_stream_raises_error(form):
+    class NonSeekableStream:
+        def __init__(self, data):
+            self._data = BytesIO(data)
+
+        def read(self, size=-1):
+            return self._data.read(size)
+
+        def seekable(self):
+            return False
+
+    form.file.kwargs["validators"] = [FileSize(max_size=100)]
+    stream = NonSeekableStream(b"test")
+    f = form(file=FileStorage(stream, filename="test.txt"))
+    with pytest.raises(TypeError, match="not seekable"):
+        f.validate()
 
 
 @pytest.mark.parametrize(
