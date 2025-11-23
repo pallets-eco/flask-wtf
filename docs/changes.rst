@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.x.x
+-------------
+
+Unreleased
+
+- Stop support for Python 3.9. Start support for Python 3.14. :pr:`648`
+
 Version 1.2.2
 -------------
 
