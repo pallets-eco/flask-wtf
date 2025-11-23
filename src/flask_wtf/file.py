@@ -1,5 +1,6 @@
 from collections import abc
 from io import BytesIO
+from io import SEEK_END
 
 from werkzeug.datastructures import FileStorage
 from wtforms import FileField as _FileField
@@ -133,14 +134,13 @@ class FileSize:
             if isinstance(f.stream, BytesIO):
                 file_size = f.getbuffer().nbytes
             elif f.seekable():
-                file_size = f.seek(0, 2)
+                file_size = f.seek(0, SEEK_END)
                 f.seek(0)
             else:
-                file_size = len(f.read())
-                try:
-                    f.seek(0)  # reset cursor position to beginning of file
-                except OSError:
-                    pass  # welp we broke it
+                raise TypeError(
+                    f"File stream {type(f.stream).__name__} is not seekable. "
+                    "FileSize validator requires seekable streams."
+                )
 
             if (file_size < self.min_size) or (file_size > self.max_size):
                 # the file is too small or too big => validation failure
