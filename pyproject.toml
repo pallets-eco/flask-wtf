@@ -34,6 +34,26 @@ Chat = "https://discord.gg/pallets"
 [project.optional-dependencies]
 email = ["email_validator"]
 
+[dependency-groups]
+test = [
+    "pytest",
+]
+test-babel = [
+    "Flask-Babel",
+    "flask-reuploaded",
+]
+docs = [
+    "Pallets-Sphinx-Themes",
+    "Sphinx",
+    "sphinx-issues",
+    "sphinxcontrib-log-cabinet",
+]
+dev = [
+    "pre-commit",
+    "tox",
+    "tox-uv",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -49,7 +69,9 @@ include = [
     "src/",
     "docs/",
     "tests/",
+    "examples/",
     "CHANGES.rst",
+    "CONTRIBUTING.rst",
     "tox.ini",
 ]
 exclude = [
