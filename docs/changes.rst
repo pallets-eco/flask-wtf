@@ -8,6 +8,7 @@ Unreleased
 
 - Don't read the whole uploaded files to know their size. :pr:`635`
 - Stop support for Python 3.9. Start support for Python 3.14. :pr:`648`
+- Migrate the project to uv. :pr:`649`
 
 Version 1.2.2
 -------------
