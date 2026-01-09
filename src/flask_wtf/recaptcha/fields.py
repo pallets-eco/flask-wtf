@@ -7,6 +7,8 @@ __all__ = ["RecaptchaField"]
 
 
 class RecaptchaField(Field):
+    """The field will always be valid if current_app.testing is True"""
+
     widget = widgets.RecaptchaWidget()
 
     # error message if recaptcha validation fails
