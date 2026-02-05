@@ -217,16 +217,7 @@ class CSRFProtect:
             if not request.endpoint:
                 return
 
-            if app.blueprints.get(request.blueprint) in self._exempt_blueprints:
-                return
-
-            view = app.view_functions.get(request.endpoint)
-            dest = f"{view.__module__}.{view.__name__}"
-
-            if dest in self._exempt_views:
-                return
-
-            self.protect()
+            self.protect(respect_exempts=True)
 
     def _get_csrf_token(self):
         # find the token in the form data
@@ -253,7 +244,16 @@ class CSRFProtect:
 
         return None
 
-    def protect(self):
+    def protect(self, respect_exempts=False):
+        if respect_exempts:
+            if current_app.blueprints.get(request.blueprint) in self._exempt_blueprints:
+                return
+
+            view = current_app.view_functions.get(request.endpoint)
+            dest = f"{view.__module__}.{view.__name__}"
+            if view is not None and dest in self._exempt_views:
+                return
+
         if request.method not in current_app.config["WTF_CSRF_METHODS"]:
             return
 
