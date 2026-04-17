@@ -16,6 +16,9 @@ Configuration
 ``WTF_CSRF_HEADERS``       HTTP headers to search for CSRF token when it is not
                            provided in the form. Default is
                            ``['X-CSRFToken', 'X-CSRF-Token']``.
+``WTF_CSRF_META_NAME``     Value of the ``name`` attribute rendered by
+                           :func:`~flask_wtf.csrf.csrf_meta_tag`. Default is
+                           ``csrf-token``.
 ``WTF_CSRF_TIME_LIMIT``    Max age in seconds for CSRF tokens. Default is
                            ``3600``. If set to ``None``, the CSRF token is valid
                            for the life of the session.

@@ -4,6 +4,7 @@ from flask import g
 from flask import render_template_string
 
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import csrf_meta_tag
 from flask_wtf.csrf import CSRFError
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
@@ -33,6 +34,47 @@ def csrf(app):
 def test_render_token(req_ctx):
     token = generate_csrf()
     assert render_template_string("{{ csrf_token() }}") == token
+
+
+def test_csrf_meta_tag_default(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag()
+    assert rendered == f'<meta name="csrf-token" content="{token}">'
+
+
+def test_csrf_meta_tag_custom_name_param(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name="x-csrf")
+    assert rendered == f'<meta name="x-csrf" content="{token}">'
+
+
+def test_csrf_meta_tag_config(app, req_ctx):
+    app.config["WTF_CSRF_META_NAME"] = "authenticity-token"
+    token = generate_csrf()
+    rendered = csrf_meta_tag()
+    assert rendered == f'<meta name="authenticity-token" content="{token}">'
+
+
+def test_csrf_meta_tag_param_overrides_config(app, req_ctx):
+    app.config["WTF_CSRF_META_NAME"] = "from-config"
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name="from-param")
+    assert rendered == f'<meta name="from-param" content="{token}">'
+
+
+def test_csrf_meta_tag_jinja(req_ctx):
+    token = generate_csrf()
+    assert (
+        render_template_string("{{ csrf_meta_tag() }}")
+        == f'<meta name="csrf-token" content="{token}">'
+    )
+
+
+def test_csrf_meta_tag_escapes_name(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name='"><script>alert(1)</script>')
+    assert "<script>" not in rendered
+    assert f'content="{token}"' in rendered
 
 
 def test_protect(app, client, app_ctx):

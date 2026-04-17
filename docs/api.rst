@@ -39,3 +39,5 @@ CSRF Protection
 .. autofunction:: generate_csrf
 
 .. autofunction:: validate_csrf
+
+.. autofunction:: csrf_meta_tag
