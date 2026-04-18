@@ -12,6 +12,8 @@ Unreleased
 - Allow setting a ``nonce`` on :class:`~flask_wtf.recaptcha.RecaptchaField`
   (string or zero-argument callable) for nonce-based Content Security
   Policies. :pr:`312`
+- Add ``csrf_meta_tag()`` helper and ``WTF_CSRF_META_NAME`` setting to render
+  the CSRF token as an HTML ``<meta>`` tag.
 
 Version 1.2.2
 -------------
