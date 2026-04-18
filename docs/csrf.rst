@@ -61,6 +61,11 @@ token in the form.
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     </form>
 
+The ``name`` attribute must match the ``WTF_CSRF_FIELD_NAME`` setting
+(``'csrf_token'`` by default). Otherwise the request fails with a
+``Bad Request: CSRF token missing`` error. Change the setting if you need a
+different field name.
+
 HTML Meta Tag
 -------------
 
