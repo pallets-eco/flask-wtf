@@ -171,6 +171,11 @@ Example of RECAPTCHA_PARAMETERS, and RECAPTCHA_DATA_ATTRS::
 For your convenience, when testing your application, if ``app.testing`` is ``True``, the recaptcha
 field will always be valid.
 
+In development environment or when you are offline you can disable all
+recaptcha fields::
+
+    RECAPTCHA_ENABLED = False
+
 If your site uses a nonce-based Content Security Policy, pass a ``nonce``
 to :class:`RecaptchaField` so the generated ``<script>`` tag carries the
 matching ``nonce`` attribute. Because the nonce typically changes on every

@@ -43,6 +43,9 @@ Recaptcha
 ``RECAPTCHA_PUBLIC_KEY``    **required** A public key.
 ``RECAPTCHA_PRIVATE_KEY``   **required** A private key.
                             https://www.google.com/recaptcha/admin
+``RECAPTCHA_ENABLED``       Set to ``False`` to disable recaptcha widgets
+                            and always validate recaptcha fields as
+                            valid. Default is ``True``.
 ``RECAPTCHA_PARAMETERS``    **optional** A dict of configuration options.
 ``RECAPTCHA_HTML``          **optional** Override default HTML template
                             for Recaptcha.

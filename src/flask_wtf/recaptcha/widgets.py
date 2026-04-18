@@ -46,6 +46,9 @@ class RecaptchaWidget:
     def __call__(self, field, error=None, **kwargs):
         """Returns the recaptcha input HTML."""
 
+        if not current_app.config.get("RECAPTCHA_ENABLED", True):
+            return Markup("<!-- recaptcha disabled -->")
+
         try:
             public_key = current_app.config["RECAPTCHA_PUBLIC_KEY"]
         except KeyError:

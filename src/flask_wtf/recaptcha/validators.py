@@ -22,8 +22,13 @@ class Recaptcha:
     """Validates a ReCaptcha.
 
     Verification is skipped and the field is considered valid whenever
-    ``current_app.testing`` is ``True``, so tests don't need a real
+    ``current_app.testing`` is ``True`` or ``RECAPTCHA_ENABLED`` is
+    ``False``, so tests and offline development don't need a real
     reCAPTCHA token.
+
+    .. versionchanged:: 1.3.0
+        Verification is also skipped when ``RECAPTCHA_ENABLED`` is
+        ``False``.
     """
 
     def __init__(self, message=None):
@@ -32,7 +37,7 @@ class Recaptcha:
         self.message = message
 
     def __call__(self, form, field):
-        if current_app.testing:
+        if current_app.testing or not current_app.config.get("RECAPTCHA_ENABLED", True):
             return True
 
         if request.is_json:

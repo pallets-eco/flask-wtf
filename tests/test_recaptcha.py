@@ -185,6 +185,27 @@ def test_render_kwargs_are_escaped():
     assert "&lt;script&gt;" in render
 
 
+def test_recaptcha_enabled_false_skips_render(app):
+    app.config["RECAPTCHA_ENABLED"] = False
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert render == Markup("<!-- recaptcha disabled -->")
+
+
+def test_recaptcha_enabled_false_skips_validation(app):
+    app.config["RECAPTCHA_ENABLED"] = False
+    with app.test_request_context():
+        f = RecaptchaForm()
+        f.validate()
+        assert not f.recaptcha.errors
+
+
+def test_recaptcha_enabled_defaults_to_true(app):
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert "g-recaptcha" in render
+
+
 def test_missing_response(app):
     with app.test_request_context():
         f = RecaptchaForm()

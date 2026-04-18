@@ -20,6 +20,7 @@ Unreleased
 - Add ``apply_exemptions`` parameter to
   :meth:`~flask_wtf.csrf.CSRFProtect.protect` so ``@csrf.exempt`` keeps working
   when validation is triggered manually. :pr:`419`
+- Add ``RECAPTCHA_ENABLED`` setting. :pr:`509`
 
 Version 1.2.2
 -------------
