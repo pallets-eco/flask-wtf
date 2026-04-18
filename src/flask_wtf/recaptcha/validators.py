@@ -19,7 +19,12 @@ __all__ = ["Recaptcha"]
 
 
 class Recaptcha:
-    """Validates a ReCaptcha."""
+    """Validates a ReCaptcha.
+
+    Verification is skipped and the field is considered valid whenever
+    ``current_app.testing`` is ``True``, so tests don't need a real
+    reCAPTCHA token.
+    """
 
     def __init__(self, message=None):
         if message is None:
