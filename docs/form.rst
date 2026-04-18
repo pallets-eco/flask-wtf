@@ -171,6 +171,22 @@ Example of RECAPTCHA_PARAMETERS, and RECAPTCHA_DATA_ATTRS::
 For your convenience, when testing your application, if ``app.testing`` is ``True``, the recaptcha
 field will always be valid.
 
+In development environment or when you are offline you can disable all
+recaptcha fields::
+
+    RECAPTCHA_ENABLED = False
+
+If your site uses a nonce-based Content Security Policy, pass a ``nonce``
+to :class:`RecaptchaField` so the generated ``<script>`` tag carries the
+matching ``nonce`` attribute. Because the nonce typically changes on every
+request, pass a zero-argument callable rather than a string so the value
+is resolved at render time::
+
+    from flask import g
+
+    class SignupForm(FlaskForm):
+        recaptcha = RecaptchaField(nonce=lambda: g.csp_nonce)
+
 And it can be easily setup in the templates:
 
 .. sourcecode:: html+jinja
@@ -182,4 +198,4 @@ And it can be easily setup in the templates:
 
 We have an example for you: `recaptcha@github`_.
 
-.. _`recaptcha@github`: https://github.com/wtforms/flask-wtf/tree/main/examples/recaptcha
+.. _`recaptcha@github`: https://github.com/pallets-eco/flask-wtf/tree/main/examples/recaptcha

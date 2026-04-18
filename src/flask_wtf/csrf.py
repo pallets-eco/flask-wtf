@@ -12,11 +12,13 @@ from flask import session
 from itsdangerous import BadData
 from itsdangerous import SignatureExpired
 from itsdangerous import URLSafeTimedSerializer
+from markupsafe import escape
+from markupsafe import Markup
 from werkzeug.exceptions import BadRequest
 from wtforms import ValidationError
 from wtforms.csrf.core import CSRF
 
-__all__ = ("generate_csrf", "validate_csrf", "CSRFProtect")
+__all__ = ("generate_csrf", "validate_csrf", "csrf_meta_tag", "CSRFProtect")
 logger = logging.getLogger(__name__)
 
 
@@ -115,6 +117,25 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
         raise ValidationError("The CSRF tokens do not match.")
 
 
+def csrf_meta_tag(name=None, secret_key=None, token_key=None):
+    """Render an HTML ``<meta>`` tag carrying the CSRF token, following the
+    convention used by Rails and recommended by OWASP for SPA and AJAX clients.
+
+    Extract the token client-side with
+    ``document.querySelector('meta[name="csrf-token"]').content`` and send it
+    in the ``X-CSRFToken`` header of state-changing requests.
+
+    :param name: Value of the meta tag's ``name`` attribute. Default is
+        ``WTF_CSRF_META_NAME`` or ``'csrf-token'``.
+    :param secret_key: Forwarded to :func:`generate_csrf`.
+    :param token_key: Forwarded to :func:`generate_csrf`.
+    """
+
+    name = _get_config(name, "WTF_CSRF_META_NAME", "csrf-token")
+    token = generate_csrf(secret_key=secret_key, token_key=token_key)
+    return Markup(f'<meta name="{escape(name)}" content="{escape(token)}">')
+
+
 def _get_config(
     value, config_name, default=None, required=True, message="CSRF is not configured."
 ):
@@ -197,11 +218,15 @@ class CSRFProtect:
         )
         app.config.setdefault("WTF_CSRF_FIELD_NAME", "csrf_token")
         app.config.setdefault("WTF_CSRF_HEADERS", ["X-CSRFToken", "X-CSRF-Token"])
+        app.config.setdefault("WTF_CSRF_META_NAME", "csrf-token")
         app.config.setdefault("WTF_CSRF_TIME_LIMIT", 3600)
         app.config.setdefault("WTF_CSRF_SSL_STRICT", True)
 
         app.jinja_env.globals["csrf_token"] = generate_csrf
-        app.context_processor(lambda: {"csrf_token": generate_csrf})
+        app.jinja_env.globals["csrf_meta_tag"] = csrf_meta_tag
+        app.context_processor(
+            lambda: {"csrf_token": generate_csrf, "csrf_meta_tag": csrf_meta_tag}
+        )
 
         @app.before_request
         def csrf_protect():
@@ -211,22 +236,7 @@ class CSRFProtect:
             if not app.config["WTF_CSRF_CHECK_DEFAULT"]:
                 return
 
-            if request.method not in app.config["WTF_CSRF_METHODS"]:
-                return
-
-            if not request.endpoint:
-                return
-
-            if app.blueprints.get(request.blueprint) in self._exempt_blueprints:
-                return
-
-            view = app.view_functions.get(request.endpoint)
-            dest = f"{view.__module__}.{view.__name__}"
-
-            if dest in self._exempt_views:
-                return
-
-            self.protect()
+            self.protect(apply_exemptions=True)
 
     def _get_csrf_token(self):
         # find the token in the form data
@@ -253,7 +263,22 @@ class CSRFProtect:
 
         return None
 
-    def protect(self):
+    def protect(self, apply_exemptions=False):
+        """Validate CSRF on the current request.
+
+        When ``apply_exemptions`` is ``True``, views and blueprints marked with
+        :meth:`exempt` are skipped. This lets you combine a custom
+        ``before_request`` hook (or any manual call) with the declarative
+        ``@csrf.exempt`` decorator.
+        """
+
+        if apply_exemptions:
+            if not request.endpoint:
+                return
+
+            if self._is_exempt():
+                return
+
         if request.method not in current_app.config["WTF_CSRF_METHODS"]:
             return
 
@@ -273,6 +298,17 @@ class CSRFProtect:
                 self._error_response("The referrer does not match the host.")
 
         g.csrf_valid = True  # mark this request as CSRF valid
+
+    def _is_exempt(self):
+        if current_app.blueprints.get(request.blueprint) in self._exempt_blueprints:
+            return True
+
+        view = current_app.view_functions.get(request.endpoint)
+        if view is None:
+            return False
+
+        dest = f"{view.__module__}.{view.__name__}"
+        return dest in self._exempt_views
 
     def exempt(self, view):
         """Mark a view or blueprint to be excluded from CSRF protection.

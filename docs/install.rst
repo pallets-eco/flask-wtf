@@ -19,12 +19,12 @@ Development
 The latest code is available from `GitHub`_. Clone the repository then install
 using pip. ::
 
-    git clone https://github.com/wtforms/flask-wtf
+    git clone https://github.com/pallets-eco/flask-wtf
     pip install -e ./flask-wtf
 
 Or install the latest build from an `archive`_. ::
 
-    pip install -U https://github.com/wtforms/flask-wtf/archive/main.tar.gz
+    pip install -U https://github.com/pallets-eco/flask-wtf/archive/main.tar.gz
 
-.. _GitHub: https://github.com/wtforms/flask-wtf
-.. _archive: https://github.com/wtforms/flask-wtf/archive/main.tar.gz
+.. _GitHub: https://github.com/pallets-eco/flask-wtf
+.. _archive: https://github.com/pallets-eco/flask-wtf/archive/main.tar.gz

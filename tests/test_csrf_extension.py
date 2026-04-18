@@ -2,8 +2,10 @@ import pytest
 from flask import Blueprint
 from flask import g
 from flask import render_template_string
+from flask import request
 
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import csrf_meta_tag
 from flask_wtf.csrf import CSRFError
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
@@ -33,6 +35,47 @@ def csrf(app):
 def test_render_token(req_ctx):
     token = generate_csrf()
     assert render_template_string("{{ csrf_token() }}") == token
+
+
+def test_csrf_meta_tag_default(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag()
+    assert rendered == f'<meta name="csrf-token" content="{token}">'
+
+
+def test_csrf_meta_tag_custom_name_param(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name="x-csrf")
+    assert rendered == f'<meta name="x-csrf" content="{token}">'
+
+
+def test_csrf_meta_tag_config(app, req_ctx):
+    app.config["WTF_CSRF_META_NAME"] = "authenticity-token"
+    token = generate_csrf()
+    rendered = csrf_meta_tag()
+    assert rendered == f'<meta name="authenticity-token" content="{token}">'
+
+
+def test_csrf_meta_tag_param_overrides_config(app, req_ctx):
+    app.config["WTF_CSRF_META_NAME"] = "from-config"
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name="from-param")
+    assert rendered == f'<meta name="from-param" content="{token}">'
+
+
+def test_csrf_meta_tag_jinja(req_ctx):
+    token = generate_csrf()
+    assert (
+        render_template_string("{{ csrf_meta_tag() }}")
+        == f'<meta name="csrf-token" content="{token}">'
+    )
+
+
+def test_csrf_meta_tag_escapes_name(req_ctx):
+    token = generate_csrf()
+    rendered = csrf_meta_tag(name='"><script>alert(1)</script>')
+    assert "<script>" not in rendered
+    assert f'content="{token}"' in rendered
 
 
 def test_protect(app, client, app_ctx):
@@ -139,6 +182,40 @@ def test_manual_protect(app, csrf, client):
 
     response = client.post("/manual")
     assert response.status_code == 400
+
+
+def test_protect_apply_exemptions(app, csrf, client):
+    app.config["WTF_CSRF_CHECK_DEFAULT"] = False
+
+    @app.before_request
+    def custom():
+        if request.headers.get("Authorization", "").startswith("Bearer "):
+            return
+        csrf.protect(apply_exemptions=True)
+
+    @app.route("/api", methods=["POST"])
+    def api():
+        pass
+
+    @app.route("/webhook", methods=["POST"])
+    @csrf.exempt
+    def webhook():
+        pass
+
+    bp = Blueprint("public", __name__, url_prefix="/public")
+    csrf.exempt(bp)
+
+    @bp.route("/", methods=["POST"])
+    def public():
+        pass
+
+    app.register_blueprint(bp)
+
+    assert client.post("/api").status_code == 400
+    assert client.post("/api", headers={"Authorization": "Bearer x"}).status_code == 200
+    assert client.post("/webhook").status_code == 200
+    assert client.post("/public/").status_code == 200
+    assert client.post("/missing").status_code == 404
 
 
 def test_exempt_blueprint(app, csrf, client):

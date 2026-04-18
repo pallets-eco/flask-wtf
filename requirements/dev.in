@@ -1,5 +1,0 @@
--r docs.in
--r tests.in
-pip-compile-multi
-pre-commit
-tox
