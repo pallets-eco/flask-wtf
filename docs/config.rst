@@ -63,6 +63,16 @@ Recaptcha
 
 =========================== ==============================================
 
+Per-instance HTML attributes can also be passed when rendering the field.
+Any keyword argument given to the widget is forwarded to the captcha
+``<div>``, following the standard WTForms naming convention (``class_``
+becomes ``class``, ``data_foo`` becomes ``data-foo``, ``aria_label``
+becomes ``aria-label``). Kwargs take precedence over ``RECAPTCHA_DIV_CLASS``
+and ``RECAPTCHA_DATA_ATTRS``. The ``id`` attribute defaults to the field
+id and can be overridden the same way::
+
+    {{ form.recaptcha(class_="my-captcha", data_theme="dark", aria_label="Captcha") }}
+
 Logging
 -------
 

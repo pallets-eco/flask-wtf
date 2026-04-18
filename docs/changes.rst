@@ -14,6 +14,9 @@ Unreleased
   Policies. :pr:`312`
 - Add ``csrf_meta_tag()`` helper and ``WTF_CSRF_META_NAME`` setting to render
   the CSRF token as an HTML ``<meta>`` tag.
+- Forward keyword arguments passed to the reCAPTCHA widget as HTML attributes
+  on the captcha ``<div>``, with the field id used as a default ``id``.
+  :pr:`353`
 
 Version 1.2.2
 -------------

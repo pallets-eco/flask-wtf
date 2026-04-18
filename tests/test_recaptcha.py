@@ -137,6 +137,54 @@ def test_render_custom_args(app):
     assert 'data-red="blue"' in render
 
 
+def test_render_default_id_from_field():
+    """The div ``id`` defaults to the field id."""
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert f'id="{f.recaptcha.id}"' in render
+
+
+def test_render_custom_html_attrs():
+    """Arbitrary HTML attributes can be passed as kwargs to the widget."""
+    f = RecaptchaForm()
+    render = f.recaptcha(style="margin: 1em;", aria_label="captcha")
+    assert 'style="margin: 1em;"' in render
+    assert 'aria-label="captcha"' in render
+
+
+def test_render_kwargs_override_class(app):
+    """``class_`` kwarg takes precedence over ``RECAPTCHA_DIV_CLASS`` config."""
+    app.config["RECAPTCHA_DIV_CLASS"] = "from-config"
+    f = RecaptchaForm()
+    render = f.recaptcha(class_="from-kwargs")
+    assert 'class="from-kwargs"' in render
+    assert "from-config" not in render
+
+
+def test_render_kwargs_override_data_attr(app):
+    """``data-*`` kwargs take precedence over ``RECAPTCHA_DATA_ATTRS`` config."""
+    app.config["RECAPTCHA_DATA_ATTRS"] = {"theme": "light"}
+    f = RecaptchaForm()
+    render = f.recaptcha(data_theme="dark")
+    assert 'data-theme="dark"' in render
+    assert "light" not in render
+
+
+def test_render_kwargs_override_id():
+    """``id`` kwarg overrides the default field id."""
+    f = RecaptchaForm()
+    render = f.recaptcha(id="custom-id")
+    assert 'id="custom-id"' in render
+
+
+def test_render_kwargs_are_escaped():
+    """HTML attribute values from kwargs are escaped."""
+    f = RecaptchaForm()
+    render = f.recaptcha(title='"><script>alert(1)</script>')
+    assert "<script>alert(1)</script>" not in render
+    assert "&lt;script&gt;" in render
+
+
 def test_missing_response(app):
     with app.test_request_context():
         f = RecaptchaForm()
