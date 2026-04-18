@@ -1,4 +1,4 @@
-BSD License
-===========
+BSD-3-Clause License
+====================
 
-.. include:: ../LICENSE
+.. include:: ../LICENSE.rst

@@ -1,8 +1,0 @@
-Flask==0.8
-Flask-SQLAlchemy==0.16
-Flask-WTF==0.6
-Jinja2==2.6
-SQLAlchemy==0.7.7
-WTForms==1.0.1
-Werkzeug==0.8.3
-wsgiref==0.1.2
