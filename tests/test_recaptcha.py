@@ -22,6 +22,24 @@ class RecaptchaNonceForm(FlaskForm):
     recaptcha = RecaptchaField(nonce="foobar")
 
 
+class RecaptchaNonceCallableForm(FlaskForm):
+    """Form using a callable nonce, for per-request resolution tests."""
+
+    class Meta:
+        csrf = False
+
+    recaptcha = RecaptchaField(nonce=lambda: "dynamic-nonce")
+
+
+class RecaptchaNonceUnsafeForm(FlaskForm):
+    """Form with an HTML-unsafe nonce, to assert escaping."""
+
+    class Meta:
+        csrf = False
+
+    recaptcha = RecaptchaField(nonce='"><script>alert(1)</script>')
+
+
 @pytest.fixture
 def app(app):
     app.testing = False
@@ -70,6 +88,28 @@ def test_render_has_nonce():
     f = RecaptchaNonceForm()
     render = f.recaptcha()
     assert 'nonce="foobar"' in render
+
+
+def test_render_without_nonce():
+    """Render must not include a nonce attribute when none is set."""
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert "nonce=" not in render
+
+
+def test_render_nonce_callable():
+    """A callable nonce is resolved at render time."""
+    f = RecaptchaNonceCallableForm()
+    render = f.recaptcha()
+    assert 'nonce="dynamic-nonce"' in render
+
+
+def test_render_nonce_is_escaped():
+    """Nonce values are HTML-escaped to avoid attribute injection."""
+    f = RecaptchaNonceUnsafeForm()
+    render = f.recaptcha()
+    assert "<script>alert(1)</script>" not in render
+    assert "&lt;script&gt;" in render
 
 
 def test_render_custom_html(app):

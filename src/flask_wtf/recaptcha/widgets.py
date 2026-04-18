@@ -1,14 +1,14 @@
 from urllib.parse import urlencode
 
 from flask import current_app
+from markupsafe import escape
 from markupsafe import Markup
 
 RECAPTCHA_SCRIPT_DEFAULT = "https://www.google.com/recaptcha/api.js"
 RECAPTCHA_DIV_CLASS_DEFAULT = "g-recaptcha"
-RECAPTCHA_NONCE = ' nonce="%s"'
 RECAPTCHA_TEMPLATE = """
-<script src='%s' async defer%s></script>
-<div class="%s" %s></div>
+<script src='{script}' async defer{nonce_attr}></script>
+<div class="{div_class}" {snippet}></div>
 """
 
 __all__ = ["RecaptchaWidget"]
@@ -24,17 +24,24 @@ class RecaptchaWidget:
         if not script:
             script = RECAPTCHA_SCRIPT_DEFAULT
         if params:
-            script += "?" + urlencode(params)
-        nonce_attr = ""
-        if nonce is not None:
-            nonce_attr = RECAPTCHA_NONCE % nonce
+            script += f"?{urlencode(params)}"
+        if callable(nonce):
+            nonce = nonce()
+        nonce_attr = f' nonce="{escape(nonce)}"' if nonce else ""
         attrs = current_app.config.get("RECAPTCHA_DATA_ATTRS", {})
         attrs["sitekey"] = public_key
         snippet = " ".join(f'data-{k}="{attrs[k]}"' for k in attrs)  # noqa: B028, B907
         div_class = current_app.config.get("RECAPTCHA_DIV_CLASS")
         if not div_class:
             div_class = RECAPTCHA_DIV_CLASS_DEFAULT
-        return Markup(RECAPTCHA_TEMPLATE % (script, nonce_attr, div_class, snippet))
+        return Markup(
+            RECAPTCHA_TEMPLATE.format(
+                script=script,
+                nonce_attr=nonce_attr,
+                div_class=div_class,
+                snippet=snippet,
+            )
+        )
 
     def __call__(self, field, error=None, **kwargs):
         """Returns the recaptcha input HTML."""
