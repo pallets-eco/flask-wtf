@@ -1,8 +1,0 @@
-include tox.ini
-include requirements/*.txt
-include CONTRIBUTING.rst
-graft docs
-prune docs/_build
-graft examples
-graft tests
-global-exclude *.pyc

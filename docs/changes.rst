@@ -1,6 +1,23 @@
 Changes
 =======
 
+Version 1.x.x
+-------------
+
+Unreleased
+
+- Don't read the whole uploaded files to know their size. :pr:`635`
+- Stop support for Python 3.9. Start support for Python 3.14. :pr:`648`
+- Migrate the project to uv. :pr:`649`
+- Allow setting a ``nonce`` on :class:`~flask_wtf.recaptcha.RecaptchaField`
+  (string or zero-argument callable) for nonce-based Content Security
+  Policies. :pr:`312`
+- Add ``csrf_meta_tag()`` helper and ``WTF_CSRF_META_NAME`` setting to render
+  the CSRF token as an HTML ``<meta>`` tag.
+- Forward keyword arguments passed to the reCAPTCHA widget as HTML attributes
+  on the captcha ``<div>``, with the field id used as a default ``id``.
+  :pr:`353`
+
 Version 1.2.2
 -------------
 

@@ -3,11 +3,15 @@ build:
   os: ubuntu-24.04
   tools:
     python: '3.13'
-python:
-  install:
-    - requirements: requirements/docs.txt
-    - method: pip
-      path: .
+  jobs:
+    pre_create_environment:
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    create_environment:
+      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
+    install:
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group docs
 sphinx:
   builder: dirhtml
   fail_on_warning: true

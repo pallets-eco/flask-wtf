@@ -51,7 +51,7 @@ an issue that interests you.
 
 Include the following in your patch:
 
--   Use `Black`_ to format your code. This and other tools will run
+-   Use `Ruff`_ to format your code. This and other tools will run
     automatically if you install `pre-commit`_ using the instructions
     below.
 -   Include tests if your patch adds or changes code. Make sure the test
@@ -62,7 +62,7 @@ Include the following in your patch:
     entries. Also include ``.. versionchanged::`` inline changelogs in
     relevant docstrings.
 
-.. _Black: https://black.readthedocs.io
+.. _Ruff: https://docs.astral.sh/ruff/
 .. _pre-commit: https://pre-commit.com
 
 
@@ -72,7 +72,7 @@ First time setup
 -   Download and install the `latest version of git`_.
 -   Configure git with your `username`_ and `email`_.
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git config --global user.name 'your name'
         $ git config --global user.email 'your email'
@@ -81,7 +81,7 @@ First time setup
 -   Fork Flask-WTF to your GitHub account by clicking the `Fork`_ button.
 -   `Clone`_ the main repository locally.
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git clone https://github.com/pallets-eco/flask-wtf
         $ cd flask-wtf
@@ -90,41 +90,30 @@ First time setup
     ``{username}`` with your username. This names the remote "fork", the
     default WTForms remote is "origin".
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git remote add fork https://github.com/{username}/flask-wtf
 
--   Create a virtualenv.
+-   Install `uv`_ if you don't have it already.
 
-    .. code-block:: text
+    .. code-block:: console
 
-        $ python3 -m venv env
-        $ . env/bin/activate
+        $ curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    On Windows, activating is different.
+    On Windows, see the `uv installation docs`_.
 
-    .. code-block:: text
+-   Sync the project dependencies with uv. This will create a virtual
+    environment and install all development dependencies.
 
-        > env\Scripts\activate
+    .. code-block:: console
 
--   Upgrade pip and setuptools.
+        $ uv sync --all-groups
 
-    .. code-block:: text
+-   (Optional) Install the pre-commit hooks.
 
-        $ python -m pip install --upgrade pip setuptools
+    .. code-block:: console
 
--   Install the development dependencies, then install Flask-WTF in
-    editable mode.
-
-    .. code-block:: text
-
-        $ pip install -r requirements/dev.txt && pip install -e .
-
--   Install the pre-commit hooks.
-
-    .. code-block:: text
-
-        $ pre-commit install
+        $ uv run pre-commit install
 
 .. _latest version of git: https://git-scm.com/downloads
 .. _username: https://docs.github.com/en/github/using-git/setting-your-username-in-git
@@ -132,6 +121,8 @@ First time setup
 .. _GitHub account: https://github.com/join
 .. _Fork: https://github.com/pallets-eco/flask-wtf/fork
 .. _Clone: https://docs.github.com/en/github/getting-started-with-github/fork-a-repo#step-2-create-a-local-clone-of-your-fork
+.. _uv: https://docs.astral.sh/uv/
+.. _uv installation docs: https://docs.astral.sh/uv/getting-started/installation/
 
 
 Start coding
@@ -141,7 +132,7 @@ Start coding
     you're submitting a bug or documentation fix, branch off of the
     latest ".x" branch.
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git fetch origin
         $ git checkout -b your-branch-name origin/1.0.x
@@ -149,7 +140,7 @@ Start coding
     If you're submitting a feature addition or change, branch off of the
     "main" branch.
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git fetch origin
         $ git checkout -b your-branch-name origin/main
@@ -162,7 +153,7 @@ Start coding
     `create a pull request`_. Link to the issue being addressed with
     ``fixes #123`` in the pull request.
 
-    .. code-block:: text
+    .. code-block:: console
 
         $ git push --set-upstream fork your-branch-name
 
@@ -175,18 +166,18 @@ Running the tests
 
 Run the basic test suite with pytest.
 
-.. code-block:: text
+.. code-block:: console
 
-    $ pytest
+    $ uv run pytest
 
 This runs the tests for the current environment, which is usually
 sufficient. CI will run the full suite when you submit your pull
 request. You can run the full test suite with tox if you don't want to
 wait.
 
-.. code-block:: text
+.. code-block:: console
 
-    $ tox
+    $ uv run tox
 
 
 Running test coverage
@@ -196,11 +187,10 @@ Generating a report of lines that do not have test coverage can indicate
 where to start contributing. Run ``pytest`` using ``coverage`` and
 generate a report.
 
-.. code-block:: text
+.. code-block:: console
 
-    $ pip install coverage
-    $ coverage run -m pytest
-    $ coverage html
+    $ uv run coverage run -m pytest
+    $ uv run coverage html
 
 Open ``htmlcov/index.html`` in your browser to explore the report.
 
@@ -212,10 +202,16 @@ Building the docs
 
 Build the docs in the ``docs`` directory using Sphinx.
 
-.. code-block:: text
+.. code-block:: console
+
+    $ uv run tox -e docs
+
+Or build manually:
+
+.. code-block:: console
 
     $ cd docs
-    $ make html
+    $ uv run make html
 
 Open ``_build/html/index.html`` in your browser to view the docs.
 
