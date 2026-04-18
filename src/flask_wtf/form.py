@@ -1,14 +1,14 @@
-import warnings
-
-from flask import current_app, request, session
-from jinja2 import Markup
-from werkzeug.datastructures import CombinedMultiDict, ImmutableMultiDict
+from flask import current_app
+from flask import request
+from flask import session
+from markupsafe import Markup
+from werkzeug.datastructures import CombinedMultiDict
+from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.utils import cached_property
 from wtforms import Form
 from wtforms.meta import DefaultMeta
 from wtforms.widgets import HiddenInput
 
-from ._compat import FlaskWTFDeprecationWarning, string_types, text_type
 from .csrf import _FlaskFormCSRF
 
 try:
@@ -17,7 +17,7 @@ except ImportError:
     translations = None  # babel not installed
 
 
-SUBMIT_METHODS = set(('POST', 'PUT', 'PATCH', 'DELETE'))
+SUBMIT_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 _Auto = object()
 
 
@@ -35,32 +35,28 @@ class FlaskForm(Form):
 
         @cached_property
         def csrf(self):
-            return current_app.config.get('WTF_CSRF_ENABLED', True)
+            return current_app.config.get("WTF_CSRF_ENABLED", True)
 
         @cached_property
         def csrf_secret(self):
-            return current_app.config.get(
-                'WTF_CSRF_SECRET_KEY', current_app.secret_key
-            )
+            return current_app.config.get("WTF_CSRF_SECRET_KEY", current_app.secret_key)
 
         @cached_property
         def csrf_field_name(self):
-            return current_app.config.get('WTF_CSRF_FIELD_NAME', 'csrf_token')
+            return current_app.config.get("WTF_CSRF_FIELD_NAME", "csrf_token")
 
         @cached_property
         def csrf_time_limit(self):
-            return current_app.config.get('WTF_CSRF_TIME_LIMIT', 3600)
+            return current_app.config.get("WTF_CSRF_TIME_LIMIT", 3600)
 
         def wrap_formdata(self, form, formdata):
             if formdata is _Auto:
                 if _is_submitted():
                     if request.files:
-                        return CombinedMultiDict((
-                            request.files, request.form
-                        ))
+                        return CombinedMultiDict((request.files, request.form))
                     elif request.form:
                         return request.form
-                    elif request.get_json():
+                    elif request.is_json:
                         return ImmutableMultiDict(request.get_json())
 
                 return None
@@ -68,23 +64,13 @@ class FlaskForm(Form):
             return formdata
 
         def get_translations(self, form):
-            if not current_app.config.get('WTF_I18N_ENABLED', True):
-                return super(FlaskForm.Meta, self).get_translations(form)
+            if not current_app.config.get("WTF_I18N_ENABLED", True):
+                return super().get_translations(form)
 
             return translations
 
     def __init__(self, formdata=_Auto, **kwargs):
-        csrf_enabled = kwargs.pop('csrf_enabled', None)
-
-        if csrf_enabled is not None:
-            warnings.warn(FlaskWTFDeprecationWarning(
-                '"csrf_enabled" is deprecated and will be removed in 1.0. '
-                "Pass meta={'csrf': False} instead."
-            ), stacklevel=3)
-            kwargs['meta'] = kwargs.get('meta') or {}
-            kwargs['meta'].setdefault('csrf', csrf_enabled)
-
-        super(FlaskForm, self).__init__(formdata=formdata, **kwargs)
+        super().__init__(formdata=formdata, **kwargs)
 
     def is_submitted(self):
         """Consider the form submitted if there is an active request and
@@ -93,11 +79,11 @@ class FlaskForm(Form):
 
         return _is_submitted()
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, extra_validators=None):
         """Call :meth:`validate` only if the form is submitted.
         This is a shortcut for ``form.is_submitted() and form.validate()``.
         """
-        return self.is_submitted() and self.validate()
+        return self.is_submitted() and self.validate(extra_validators=extra_validators)
 
     def hidden_tag(self, *fields):
         """Render the form's hidden fields in one call.
@@ -122,7 +108,7 @@ class FlaskForm(Form):
 
         def hidden_fields(fields):
             for f in fields:
-                if isinstance(f, string_types):
+                if isinstance(f, str):
                     f = getattr(self, f, None)
 
                 if f is None or not isinstance(f.widget, HiddenInput):
@@ -130,9 +116,7 @@ class FlaskForm(Form):
 
                 yield f
 
-        return Markup(
-            u'\n'.join(text_type(f) for f in hidden_fields(fields or self))
-        )
+        return Markup("\n".join(str(f) for f in hidden_fields(fields or self)))
 
 
 def _is_submitted():
@@ -141,17 +125,3 @@ def _is_submitted():
     """
 
     return bool(request) and request.method in SUBMIT_METHODS
-
-
-class Form(FlaskForm):
-    """
-    .. deprecated:: 0.13
-        Renamed to :class:`~flask_wtf.FlaskForm`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn(FlaskWTFDeprecationWarning(
-            '"flask_wtf.Form" has been renamed to "FlaskForm" '
-            'and will be removed in 1.0.'
-        ), stacklevel=3)
-        super(Form, self).__init__(*args, **kwargs)

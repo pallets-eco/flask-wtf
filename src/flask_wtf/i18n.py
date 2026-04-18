@@ -1,13 +1,10 @@
 from babel import support
-from flask import current_app, request
+from flask import current_app
+from flask import request
+from flask_babel import get_locale
 from wtforms.i18n import messages_path
 
-try:
-    from flask_babel import get_locale
-except ImportError:
-    from flask_babelex import get_locale
-
-__all__ = ('Translations', 'translations')
+__all__ = ("Translations", "translations")
 
 
 def _get_translations():
@@ -19,21 +16,21 @@ def _get_translations():
         return None
 
     # babel should be in extensions for get_locale
-    if 'babel' not in current_app.extensions:
+    if "babel" not in current_app.extensions:
         return None
 
-    translations = getattr(request, 'wtforms_translations', None)
+    translations = getattr(request, "wtforms_translations", None)
 
     if translations is None:
         translations = support.Translations.load(
-            messages_path(), [get_locale()], domain='wtforms'
+            messages_path(), [get_locale()], domain="wtforms"
         )
         request.wtforms_translations = translations
 
     return translations
 
 
-class Translations(object):
+class Translations:
     def gettext(self, string):
         t = _get_translations()
         return string if t is None else t.ugettext(string)

@@ -1,11 +1,17 @@
+.. rst-class:: hide-header
+
 Flask-WTF
 =========
+
+.. image:: _static/flask-wtf.png
+    :alt: Flask-WTF
+    :align: center
 
 Simple integration of `Flask`_ and `WTForms`_, including CSRF, file upload,
 and reCAPTCHA.
 
 .. _Flask: https://www.palletsprojects.com/p/flask
-.. _WTForms: https://wtforms.readthedocs.io/en/latest/
+.. _WTForms: https://wtforms.readthedocs.io/
 
 Features
 --------
@@ -52,7 +58,6 @@ Legal information and changelog are here.
 .. toctree::
    :maxdepth: 2
 
-   upgrade
-   changelog
-   authors
    license
+   changes
+   contributing

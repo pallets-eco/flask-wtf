@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions
+    url: https://stackoverflow.com/questions/tagged/flask-wtforms?tab=Frequent
+    about: Search for and ask questions about your code on Stack Overflow.
+  - name: Questions and discussions
+    url: https://discord.gg/pallets
+    about: Discuss questions about your code on our Discord chat.

@@ -1,19 +1,24 @@
 import hashlib
+import hmac
 import logging
 import os
-import warnings
-from functools import wraps
+from urllib.parse import urlparse
 
-from flask import Blueprint, current_app, g, request, session
-from itsdangerous import BadData, SignatureExpired, URLSafeTimedSerializer
+from flask import Blueprint
+from flask import current_app
+from flask import g
+from flask import request
+from flask import session
+from itsdangerous import BadData
+from itsdangerous import SignatureExpired
+from itsdangerous import URLSafeTimedSerializer
+from markupsafe import escape
+from markupsafe import Markup
 from werkzeug.exceptions import BadRequest
-from werkzeug.security import safe_str_cmp
 from wtforms import ValidationError
 from wtforms.csrf.core import CSRF
 
-from ._compat import FlaskWTFDeprecationWarning, string_types, urlparse
-
-__all__ = ('generate_csrf', 'validate_csrf', 'CSRFProtect')
+__all__ = ("generate_csrf", "validate_csrf", "csrf_meta_tag", "CSRFProtect")
 logger = logging.getLogger(__name__)
 
 
@@ -26,21 +31,25 @@ def generate_csrf(secret_key=None, token_key=None):
 
     :param secret_key: Used to securely sign the token. Default is
         ``WTF_CSRF_SECRET_KEY`` or ``SECRET_KEY``.
-    :param token_key: Key where token is stored in session for comparision.
+    :param token_key: Key where token is stored in session for comparison.
         Default is ``WTF_CSRF_FIELD_NAME`` or ``'csrf_token'``.
     """
 
     secret_key = _get_config(
-        secret_key, 'WTF_CSRF_SECRET_KEY', current_app.secret_key,
-        message='A secret key is required to use CSRF.'
+        secret_key,
+        "WTF_CSRF_SECRET_KEY",
+        current_app.secret_key,
+        message="A secret key is required to use CSRF.",
     )
     field_name = _get_config(
-        token_key, 'WTF_CSRF_FIELD_NAME', 'csrf_token',
-        message='A field name is required to use CSRF.'
+        token_key,
+        "WTF_CSRF_FIELD_NAME",
+        "csrf_token",
+        message="A field name is required to use CSRF.",
     )
 
     if field_name not in g:
-        s = URLSafeTimedSerializer(secret_key, salt='wtf-csrf-token')
+        s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
 
         if field_name not in session:
             session[field_name] = hashlib.sha1(os.urandom(64)).hexdigest()
@@ -65,7 +74,7 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
         ``WTF_CSRF_SECRET_KEY`` or ``SECRET_KEY``.
     :param time_limit: Number of seconds that the token is valid. Default is
         ``WTF_CSRF_TIME_LIMIT`` or 3600 seconds (60 minutes).
-    :param token_key: Key where token is stored in session for comparision.
+    :param token_key: Key where token is stored in session for comparison.
         Default is ``WTF_CSRF_FIELD_NAME`` or ``'csrf_token'``.
 
     :raises ValidationError: Contains the reason that validation failed.
@@ -76,39 +85,59 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
     """
 
     secret_key = _get_config(
-        secret_key, 'WTF_CSRF_SECRET_KEY', current_app.secret_key,
-        message='A secret key is required to use CSRF.'
+        secret_key,
+        "WTF_CSRF_SECRET_KEY",
+        current_app.secret_key,
+        message="A secret key is required to use CSRF.",
     )
     field_name = _get_config(
-        token_key, 'WTF_CSRF_FIELD_NAME', 'csrf_token',
-        message='A field name is required to use CSRF.'
+        token_key,
+        "WTF_CSRF_FIELD_NAME",
+        "csrf_token",
+        message="A field name is required to use CSRF.",
     )
-    time_limit = _get_config(
-        time_limit, 'WTF_CSRF_TIME_LIMIT', 3600, required=False
-    )
+    time_limit = _get_config(time_limit, "WTF_CSRF_TIME_LIMIT", 3600, required=False)
 
     if not data:
-        raise ValidationError('The CSRF token is missing.')
+        raise ValidationError("The CSRF token is missing.")
 
     if field_name not in session:
-        raise ValidationError('The CSRF session token is missing.')
+        raise ValidationError("The CSRF session token is missing.")
 
-    s = URLSafeTimedSerializer(secret_key, salt='wtf-csrf-token')
+    s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
 
     try:
         token = s.loads(data, max_age=time_limit)
-    except SignatureExpired:
-        raise ValidationError('The CSRF token has expired.')
-    except BadData:
-        raise ValidationError('The CSRF token is invalid.')
+    except SignatureExpired as e:
+        raise ValidationError("The CSRF token has expired.") from e
+    except BadData as e:
+        raise ValidationError("The CSRF token is invalid.") from e
 
-    if not safe_str_cmp(session[field_name], token):
-        raise ValidationError('The CSRF tokens do not match.')
+    if not hmac.compare_digest(session[field_name], token):
+        raise ValidationError("The CSRF tokens do not match.")
+
+
+def csrf_meta_tag(name=None, secret_key=None, token_key=None):
+    """Render an HTML ``<meta>`` tag carrying the CSRF token, following the
+    convention used by Rails and recommended by OWASP for SPA and AJAX clients.
+
+    Extract the token client-side with
+    ``document.querySelector('meta[name="csrf-token"]').content`` and send it
+    in the ``X-CSRFToken`` header of state-changing requests.
+
+    :param name: Value of the meta tag's ``name`` attribute. Default is
+        ``WTF_CSRF_META_NAME`` or ``'csrf-token'``.
+    :param secret_key: Forwarded to :func:`generate_csrf`.
+    :param token_key: Forwarded to :func:`generate_csrf`.
+    """
+
+    name = _get_config(name, "WTF_CSRF_META_NAME", "csrf-token")
+    token = generate_csrf(secret_key=secret_key, token_key=token_key)
+    return Markup(f'<meta name="{escape(name)}" content="{escape(token)}">')
 
 
 def _get_config(
-    value, config_name, default=None,
-    required=True, message='CSRF is not configured.'
+    value, config_name, default=None, required=True, message="CSRF is not configured."
 ):
     """Find config value based on provided value, Flask config, and default
     value.
@@ -133,16 +162,15 @@ def _get_config(
 class _FlaskFormCSRF(CSRF):
     def setup_form(self, form):
         self.meta = form.meta
-        return super(_FlaskFormCSRF, self).setup_form(form)
+        return super().setup_form(form)
 
     def generate_csrf_token(self, csrf_token_field):
         return generate_csrf(
-            secret_key=self.meta.csrf_secret,
-            token_key=self.meta.csrf_field_name
+            secret_key=self.meta.csrf_secret, token_key=self.meta.csrf_field_name
         )
 
     def validate_csrf_token(self, form, field):
-        if g.get('csrf_valid', False):
+        if g.get("csrf_valid", False):
             # already validated by CSRFProtect
             return
 
@@ -151,14 +179,14 @@ class _FlaskFormCSRF(CSRF):
                 field.data,
                 self.meta.csrf_secret,
                 self.meta.csrf_time_limit,
-                self.meta.csrf_field_name
+                self.meta.csrf_field_name,
             )
         except ValidationError as e:
             logger.info(e.args[0])
             raise
 
 
-class CSRFProtect(object):
+class CSRFProtect:
     """Enable CSRF protection globally for a Flask app.
 
     ::
@@ -181,42 +209,44 @@ class CSRFProtect(object):
             self.init_app(app)
 
     def init_app(self, app):
-        app.extensions['csrf'] = self
+        app.extensions["csrf"] = self
 
-        app.config.setdefault('WTF_CSRF_ENABLED', True)
-        app.config.setdefault('WTF_CSRF_CHECK_DEFAULT', True)
-        app.config['WTF_CSRF_METHODS'] = set(app.config.get(
-            'WTF_CSRF_METHODS', ['POST', 'PUT', 'PATCH', 'DELETE']
-        ))
-        app.config.setdefault('WTF_CSRF_FIELD_NAME', 'csrf_token')
-        app.config.setdefault(
-            'WTF_CSRF_HEADERS', ['X-CSRFToken', 'X-CSRF-Token']
+        app.config.setdefault("WTF_CSRF_ENABLED", True)
+        app.config.setdefault("WTF_CSRF_CHECK_DEFAULT", True)
+        app.config["WTF_CSRF_METHODS"] = set(
+            app.config.get("WTF_CSRF_METHODS", ["POST", "PUT", "PATCH", "DELETE"])
         )
-        app.config.setdefault('WTF_CSRF_TIME_LIMIT', 3600)
-        app.config.setdefault('WTF_CSRF_SSL_STRICT', True)
+        app.config.setdefault("WTF_CSRF_FIELD_NAME", "csrf_token")
+        app.config.setdefault("WTF_CSRF_HEADERS", ["X-CSRFToken", "X-CSRF-Token"])
+        app.config.setdefault("WTF_CSRF_META_NAME", "csrf-token")
+        app.config.setdefault("WTF_CSRF_TIME_LIMIT", 3600)
+        app.config.setdefault("WTF_CSRF_SSL_STRICT", True)
 
-        app.jinja_env.globals['csrf_token'] = generate_csrf
-        app.context_processor(lambda: {'csrf_token': generate_csrf})
+        app.jinja_env.globals["csrf_token"] = generate_csrf
+        app.jinja_env.globals["csrf_meta_tag"] = csrf_meta_tag
+        app.context_processor(
+            lambda: {"csrf_token": generate_csrf, "csrf_meta_tag": csrf_meta_tag}
+        )
 
         @app.before_request
         def csrf_protect():
-            if not app.config['WTF_CSRF_ENABLED']:
+            if not app.config["WTF_CSRF_ENABLED"]:
                 return
 
-            if not app.config['WTF_CSRF_CHECK_DEFAULT']:
+            if not app.config["WTF_CSRF_CHECK_DEFAULT"]:
                 return
 
-            if request.method not in app.config['WTF_CSRF_METHODS']:
+            if request.method not in app.config["WTF_CSRF_METHODS"]:
                 return
 
             if not request.endpoint:
                 return
 
-            if request.blueprint in self._exempt_blueprints:
+            if app.blueprints.get(request.blueprint) in self._exempt_blueprints:
                 return
 
             view = app.view_functions.get(request.endpoint)
-            dest = '{0}.{1}'.format(view.__module__, view.__name__)
+            dest = f"{view.__module__}.{view.__name__}"
 
             if dest in self._exempt_views:
                 return
@@ -225,7 +255,7 @@ class CSRFProtect(object):
 
     def _get_csrf_token(self):
         # find the token in the form data
-        field_name = current_app.config['WTF_CSRF_FIELD_NAME']
+        field_name = current_app.config["WTF_CSRF_FIELD_NAME"]
         base_token = request.form.get(field_name)
 
         if base_token:
@@ -240,7 +270,7 @@ class CSRFProtect(object):
                     return csrf_token
 
         # find the token in the headers
-        for header_name in current_app.config['WTF_CSRF_HEADERS']:
+        for header_name in current_app.config["WTF_CSRF_HEADERS"]:
             csrf_token = request.headers.get(header_name)
 
             if csrf_token:
@@ -249,7 +279,7 @@ class CSRFProtect(object):
         return None
 
     def protect(self):
-        if request.method not in current_app.config['WTF_CSRF_METHODS']:
+        if request.method not in current_app.config["WTF_CSRF_METHODS"]:
             return
 
         try:
@@ -258,14 +288,14 @@ class CSRFProtect(object):
             logger.info(e.args[0])
             self._error_response(e.args[0])
 
-        if request.is_secure and current_app.config['WTF_CSRF_SSL_STRICT']:
+        if request.is_secure and current_app.config["WTF_CSRF_SSL_STRICT"]:
             if not request.referrer:
-                self._error_response('The referrer header is missing.')
+                self._error_response("The referrer header is missing.")
 
-            good_referrer = 'https://{0}/'.format(request.host)
+            good_referrer = f"https://{request.host}/"
 
             if not same_origin(request.referrer, good_referrer):
-                self._error_response('The referrer does not match the host.')
+                self._error_response("The referrer does not match the host.")
 
         g.csrf_valid = True  # mark this request as CSRF valid
 
@@ -287,66 +317,19 @@ class CSRFProtect(object):
         """
 
         if isinstance(view, Blueprint):
-            self._exempt_blueprints.add(view.name)
+            self._exempt_blueprints.add(view)
             return view
 
-        if isinstance(view, string_types):
+        if isinstance(view, str):
             view_location = view
         else:
-            view_location = '.'.join((view.__module__, view.__name__))
+            view_location = ".".join((view.__module__, view.__name__))
 
         self._exempt_views.add(view_location)
         return view
 
     def _error_response(self, reason):
         raise CSRFError(reason)
-
-    def error_handler(self, view):
-        """Register a function that will generate the response for CSRF errors.
-
-        .. deprecated:: 0.14
-            Use the standard Flask error system with
-            ``@app.errorhandler(CSRFError)`` instead. This will be removed in
-            version 1.0.
-
-        The function will be passed one argument, ``reason``. By default it
-        will raise a :class:`~flask_wtf.csrf.CSRFError`. ::
-
-            @csrf.error_handler
-            def csrf_error(reason):
-                return render_template('error.html', reason=reason)
-
-        Due to historical reasons, the function may either return a response
-        or raise an exception with :func:`flask.abort`.
-        """
-
-        warnings.warn(FlaskWTFDeprecationWarning(
-            '"@csrf.error_handler" is deprecated. Use the standard Flask '
-            'error system with "@app.errorhandler(CSRFError)" instead. This '
-            'will be removed in 1.0.'
-        ), stacklevel=2)
-
-        @wraps(view)
-        def handler(reason):
-            response = current_app.make_response(view(reason))
-            raise CSRFError(response=response)
-
-        self._error_response = handler
-        return view
-
-
-class CsrfProtect(CSRFProtect):
-    """
-    .. deprecated:: 0.14
-        Renamed to :class:`~flask_wtf.csrf.CSRFProtect`.
-    """
-
-    def __init__(self, app=None):
-        warnings.warn(FlaskWTFDeprecationWarning(
-            '"flask_wtf.CsrfProtect" has been renamed to "CSRFProtect" '
-            'and will be removed in 1.0.'
-        ), stacklevel=2)
-        super(CsrfProtect, self).__init__(app=app)
 
 
 class CSRFError(BadRequest):
@@ -357,7 +340,7 @@ class CSRFError(BadRequest):
     :meth:`flask.Flask.errorhandler`.
     """
 
-    description = 'CSRF validation failed.'
+    description = "CSRF validation failed."
 
 
 def same_origin(current_uri, compare_uri):

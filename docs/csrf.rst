@@ -1,4 +1,4 @@
-.. module:: flask_wtf.csrf
+.. currentmodule:: flask_wtf.csrf
 
 .. _csrf:
 
@@ -34,6 +34,13 @@ Like other Flask extensions, you can apply it lazily::
     this will use the Flask app's ``SECRET_KEY``. If you'd like to use a
     separate token you can set ``WTF_CSRF_SECRET_KEY``.
 
+.. warning::
+
+    Make sure your webserver cache policy wont't interfere with the CSRF protection.
+    If pages are cached longer than the ``WTF_CSRF_TIME_LIMIT`` value, then user browsers
+    may serve cached page including expired CSRF token, resulting in random *Invalid*
+    or *Expired* CSRF errors.
+
 HTML Forms
 ----------
 
@@ -54,25 +61,51 @@ token in the form.
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     </form>
 
-JavaScript Requests
--------------------
+HTML Meta Tag
+-------------
 
-When sending an AJAX request, add the ``X-CSRFToken`` header to it.
-For example, in jQuery you can configure all requests to send the token.
+For JavaScript clients, the recommended way to expose the token to the page is
+to render it in a ``<meta>`` tag in the document ``<head>``. This is the
+convention used by Rails and recommended by the
+`OWASP CSRF prevention cheat sheet`_.
 
 .. sourcecode:: html+jinja
 
-    <script type="text/javascript">
-        var csrf_token = "{{ csrf_token() }}";
+    <head>
+        {{ csrf_meta_tag() }}
+    </head>
 
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
-                }
-            }
-        });
-    </script>
+This renders ``<meta name="csrf-token" content="...">``. The attribute name is
+configurable via the ``WTF_CSRF_META_NAME`` setting, or per-call with the
+``name`` argument: ``{{ csrf_meta_tag(name="authenticity-token") }}``.
+
+.. _OWASP CSRF prevention cheat sheet: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#storing-the-csrf-token-value-in-the-dom
+
+JavaScript Requests
+-------------------
+
+When sending an AJAX request, read the token from the meta tag and send it in
+the ``X-CSRFToken`` header. This pattern is compatible with a strict
+``Content-Security-Policy`` since no inline script is required.
+
+Using ``fetch``:
+
+.. sourcecode:: javascript
+
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+
+    fetch("/api/resource", {
+        method: "POST",
+        headers: { "X-CSRFToken": token, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+
+Using Axios, configure the default header once at startup:
+
+.. sourcecode:: javascript
+
+    axios.defaults.headers.common["X-CSRFToken"] =
+        document.querySelector('meta[name="csrf-token"]').content;
 
 Customize the error response
 ----------------------------

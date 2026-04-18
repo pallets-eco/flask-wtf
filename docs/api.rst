@@ -20,7 +20,6 @@ Forms and Fields
 .. module:: flask_wtf.file
 
 .. autoclass:: FileField
-    :members: has_file
 
 .. autoclass:: FileAllowed
 
@@ -34,11 +33,11 @@ CSRF Protection
 .. autoclass:: CSRFProtect
     :members:
 
-.. autoclass:: CsrfProtect(...)
-
 .. autoclass:: CSRFError
     :members:
 
 .. autofunction:: generate_csrf
 
 .. autofunction:: validate_csrf
+
+.. autofunction:: csrf_meta_tag
