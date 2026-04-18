@@ -236,13 +236,7 @@ class CSRFProtect:
             if not app.config["WTF_CSRF_CHECK_DEFAULT"]:
                 return
 
-            if request.method not in app.config["WTF_CSRF_METHODS"]:
-                return
-
-            if not request.endpoint:
-                return
-
-            self.protect(respect_exempts=True)
+            self.protect(apply_exemptions=True)
 
     def _get_csrf_token(self):
         # find the token in the form data
@@ -269,14 +263,20 @@ class CSRFProtect:
 
         return None
 
-    def protect(self, respect_exempts=False):
-        if respect_exempts:
-            if current_app.blueprints.get(request.blueprint) in self._exempt_blueprints:
+    def protect(self, apply_exemptions=False):
+        """Validate CSRF on the current request.
+
+        When ``apply_exemptions`` is ``True``, views and blueprints marked with
+        :meth:`exempt` are skipped. This lets you combine a custom
+        ``before_request`` hook (or any manual call) with the declarative
+        ``@csrf.exempt`` decorator.
+        """
+
+        if apply_exemptions:
+            if not request.endpoint:
                 return
 
-            view = current_app.view_functions.get(request.endpoint)
-            dest = f"{view.__module__}.{view.__name__}"
-            if view is not None and dest in self._exempt_views:
+            if self._is_exempt():
                 return
 
         if request.method not in current_app.config["WTF_CSRF_METHODS"]:
@@ -298,6 +298,17 @@ class CSRFProtect:
                 self._error_response("The referrer does not match the host.")
 
         g.csrf_valid = True  # mark this request as CSRF valid
+
+    def _is_exempt(self):
+        if current_app.blueprints.get(request.blueprint) in self._exempt_blueprints:
+            return True
+
+        view = current_app.view_functions.get(request.endpoint)
+        if view is None:
+            return False
+
+        dest = f"{view.__module__}.{view.__name__}"
+        return dest in self._exempt_views
 
     def exempt(self, view):
         """Mark a view or blueprint to be excluded from CSRF protection.

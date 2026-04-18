@@ -17,6 +17,9 @@ Unreleased
 - Forward keyword arguments passed to the reCAPTCHA widget as HTML attributes
   on the captcha ``<div>``, with the field id used as a default ``id``.
   :pr:`353`
+- Add ``apply_exemptions`` parameter to
+  :meth:`~flask_wtf.csrf.CSRFProtect.protect` so ``@csrf.exempt`` keeps working
+  when validation is triggered manually. :pr:`419`
 
 Version 1.2.2
 -------------

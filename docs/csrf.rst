@@ -146,3 +146,11 @@ pre-processing on the requests before checking for the CSRF token. ::
     def check_csrf():
         if not is_oauth(request):
             csrf.protect()
+
+Pass ``apply_exemptions=True`` to keep ``@csrf.exempt`` working in this mode.
+The call will skip validation for views and blueprints marked as exempt. ::
+
+    @app.before_request
+    def check_csrf():
+        if not is_oauth(request):
+            csrf.protect(apply_exemptions=True)

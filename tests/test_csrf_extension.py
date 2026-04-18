@@ -2,6 +2,7 @@ import pytest
 from flask import Blueprint
 from flask import g
 from flask import render_template_string
+from flask import request
 
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import csrf_meta_tag
@@ -183,16 +184,38 @@ def test_manual_protect(app, csrf, client):
     assert response.status_code == 400
 
 
-def test_exempt_with_manual_protect(app, csrf, client):
+def test_protect_apply_exemptions(app, csrf, client):
     app.config["WTF_CSRF_CHECK_DEFAULT"] = False
 
-    @app.route("/manual", methods=["POST"])
-    @csrf.exempt
-    def manual():
-        csrf.protect(respect_exempts=True)
+    @app.before_request
+    def custom():
+        if request.headers.get("Authorization", "").startswith("Bearer "):
+            return
+        csrf.protect(apply_exemptions=True)
 
-    response = client.post("/manual")
-    assert response.status_code == 200
+    @app.route("/api", methods=["POST"])
+    def api():
+        pass
+
+    @app.route("/webhook", methods=["POST"])
+    @csrf.exempt
+    def webhook():
+        pass
+
+    bp = Blueprint("public", __name__, url_prefix="/public")
+    csrf.exempt(bp)
+
+    @bp.route("/", methods=["POST"])
+    def public():
+        pass
+
+    app.register_blueprint(bp)
+
+    assert client.post("/api").status_code == 400
+    assert client.post("/api", headers={"Authorization": "Bearer x"}).status_code == 200
+    assert client.post("/webhook").status_code == 200
+    assert client.post("/public/").status_code == 200
+    assert client.post("/missing").status_code == 404
 
 
 def test_exempt_blueprint(app, csrf, client):
