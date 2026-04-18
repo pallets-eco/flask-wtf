@@ -46,7 +46,7 @@ class RecaptchaWidget:
     def __call__(self, field, error=None, **kwargs):
         """Returns the recaptcha input HTML."""
 
-        if current_app.config.get("RECAPTCHA_DISABLE", False):
+        if not current_app.config.get("RECAPTCHA_ENABLED", True):
             return Markup("<!-- recaptcha disabled -->")
 
         try:
