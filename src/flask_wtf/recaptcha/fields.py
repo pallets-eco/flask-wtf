@@ -7,6 +7,12 @@ __all__ = ["RecaptchaField"]
 
 
 class RecaptchaField(Field):
+    """reCAPTCHA field using :class:`.Recaptcha` as its default validator.
+
+    The default validator skips verification when ``current_app.testing`` is
+    ``True``, so tests don't need a real reCAPTCHA token.
+    """
+
     widget = widgets.RecaptchaWidget()
 
     # error message if recaptcha validation fails
