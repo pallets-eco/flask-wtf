@@ -56,7 +56,7 @@ class FlaskForm(Form):
                         return CombinedMultiDict((request.files, request.form))
                     elif request.form:
                         return request.form
-                    elif request.get_json():
+                    elif request.is_json:
                         return ImmutableMultiDict(request.get_json())
 
                 return None
@@ -65,7 +65,7 @@ class FlaskForm(Form):
 
         def get_translations(self, form):
             if not current_app.config.get("WTF_I18N_ENABLED", True):
-                return super(FlaskForm.Meta, self).get_translations(form)
+                return super().get_translations(form)
 
             return translations
 
@@ -79,11 +79,11 @@ class FlaskForm(Form):
 
         return _is_submitted()
 
-    def validate_on_submit(self):
+    def validate_on_submit(self, extra_validators=None):
         """Call :meth:`validate` only if the form is submitted.
         This is a shortcut for ``form.is_submitted() and form.validate()``.
         """
-        return self.is_submitted() and self.validate()
+        return self.is_submitted() and self.validate(extra_validators=extra_validators)
 
     def hidden_tag(self, *fields):
         """Render the form's hidden fields in one call.

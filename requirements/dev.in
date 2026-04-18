@@ -1,5 +1,0 @@
--r docs.in
--r tests.in
-pip-tools
-pre-commit
-tox

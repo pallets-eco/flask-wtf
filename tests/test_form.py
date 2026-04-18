@@ -109,8 +109,6 @@ def test_set_default_message_language(app, client):
         assert not form.validate_on_submit()
         assert "This field is required." in form.name.errors
 
-    client.post("/default", data={"name": "  "})
-
     @app.route("/es", methods=["POST"])
     def es():
         app.config["WTF_I18N_ENABLED"] = False
@@ -128,4 +126,5 @@ def test_set_default_message_language(app, client):
         assert not form.validate_on_submit()
         assert "Este campo es obligatorio." in form.name.errors
 
+    client.post("/default", data={"name": "  "})
     client.post("/es", data={"name": "  "})

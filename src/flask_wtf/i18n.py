@@ -1,12 +1,8 @@
 from babel import support
 from flask import current_app
 from flask import request
+from flask_babel import get_locale
 from wtforms.i18n import messages_path
-
-try:
-    from flask_babel import get_locale
-except ImportError:
-    from flask_babelex import get_locale
 
 __all__ = ("Translations", "translations")
 

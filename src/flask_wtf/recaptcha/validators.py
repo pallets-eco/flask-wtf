@@ -1,9 +1,9 @@
 import json
 from urllib import request as http
+from urllib.parse import urlencode
 
 from flask import current_app
 from flask import request
-from werkzeug.urls import url_encode
 from wtforms import ValidationError
 
 RECAPTCHA_VERIFY_SERVER_DEFAULT = "https://www.google.com/recaptcha/api/siteverify"
@@ -19,7 +19,12 @@ __all__ = ["Recaptcha"]
 
 
 class Recaptcha:
-    """Validates a ReCaptcha."""
+    """Validates a ReCaptcha.
+
+    Verification is skipped and the field is considered valid whenever
+    ``current_app.testing`` is ``True``, so tests don't need a real
+    reCAPTCHA token.
+    """
 
     def __init__(self, message=None):
         if message is None:
@@ -30,7 +35,7 @@ class Recaptcha:
         if current_app.testing or current_app.config.get("RECAPTCHA_DISABLE", False):
             return True
 
-        if request.json:
+        if request.is_json:
             response = request.json.get("g-recaptcha-response", "")
         else:
             response = request.form.get("g-recaptcha-response", "")
@@ -54,7 +59,7 @@ class Recaptcha:
         if not verify_server:
             verify_server = RECAPTCHA_VERIFY_SERVER_DEFAULT
 
-        data = url_encode(
+        data = urlencode(
             {"secret": private_key, "remoteip": remote_addr, "response": response}
         )
 

@@ -1,6 +1,87 @@
 Changes
 =======
 
+Version 1.x.x
+-------------
+
+Unreleased
+
+- Don't read the whole uploaded files to know their size. :pr:`635`
+- Stop support for Python 3.9. Start support for Python 3.14. :pr:`648`
+- Migrate the project to uv. :pr:`649`
+- Allow setting a ``nonce`` on :class:`~flask_wtf.recaptcha.RecaptchaField`
+  (string or zero-argument callable) for nonce-based Content Security
+  Policies. :pr:`312`
+- Add ``csrf_meta_tag()`` helper and ``WTF_CSRF_META_NAME`` setting to render
+  the CSRF token as an HTML ``<meta>`` tag.
+- Forward keyword arguments passed to the reCAPTCHA widget as HTML attributes
+  on the captcha ``<div>``, with the field id used as a default ``id``.
+  :pr:`353`
+- Add ``apply_exemptions`` parameter to
+  :meth:`~flask_wtf.csrf.CSRFProtect.protect` so ``@csrf.exempt`` keeps working
+  when validation is triggered manually. :pr:`419`
+
+Version 1.2.2
+-------------
+
+Released 2024-10-20
+
+- Move the project to the pallets-eco organization. :pr:`602`
+- Stop support for Python 3.8. Start support for Python 3.13. :pr:`603`
+
+Version 1.2.1
+-------------
+
+Released 2023-10-02
+
+- Fix a bug introduced with :pr:`556` where file validators were editing
+  the file fields content. :pr:`578`
+
+Version 1.2.0
+-------------
+
+Released 2023-10-01
+
+-   Add field ``MultipleFileField``. ``FileRequired``, ``FileAllowed``, ``FileSize``
+    now can be used to validate multiple files :pr:`556` :issue:`338`
+
+Version 1.1.2
+-------------
+
+Released 2023-09-29
+
+-   Fixed Flask 2.3 deprecations of ``werkzeug.urls.url_encode`` and
+    ``flask.Markup`` :pr:`565` :issue:`561`
+-   Stop support for python 3.7 :pr:`574`
+-   Use `pyproject.toml` instead of `setup.cfg` :pr:`576`
+-   Fixed nested blueprint CSRF exemption :pr:`572`
+
+Version 1.1.1
+-------------
+
+Released 2023-01-17
+
+-   Fixed `validate` `extra_validators` parameter. :pr:`548`
+
+Version 1.1.0
+-------------
+
+Released 2023-01-15
+
+-   Drop support for Python 3.6.
+-   ``validate_on_submit`` takes a ``extra_validators`` parameters :pr:`479`
+-   Stop supporting Flask-Babelex :pr:`540`
+-   Support for python 3.11 :pr:`542`
+-   Remove unused call to `JSONEncoder` :pr:`536`
+
+Version 1.0.1
+-------------
+
+Released 2022-03-31
+
+-   Update compatibility with the latest Werkzeug release. :issue:`511`
+
+
 Version 1.0.0
 --------------
 

@@ -23,7 +23,7 @@ intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/", None),
     "wtforms": ("https://wtforms.readthedocs.io/", None),
 }
-issues_github_path = "wtforms/flask-wtf"
+issues_github_path = "pallets-eco/flask-wtf"
 
 # HTML -----------------------------------------------------------------
 
@@ -32,8 +32,10 @@ html_theme_options = {"index_sidebar_logo": False}
 html_context = {
     "project_links": [
         ProjectLink("PyPI Releases", "https://pypi.org/project/Flask-WTF/"),
-        ProjectLink("Source Code", "https://github.com/wtforms/flask-wtf/"),
-        ProjectLink("Issue Tracker", "https://github.com/wtforms/flask-wtf/issues/"),
+        ProjectLink("Source Code", "https://github.com/pallets-eco/flask-wtf/"),
+        ProjectLink(
+            "Issue Tracker", "https://github.com/pallets-eco/flask-wtf/issues/"
+        ),
         ProjectLink("Chat", "https://discord.gg/pallets"),
     ]
 }

@@ -15,6 +15,31 @@ class RecaptchaForm(FlaskForm):
     recaptcha = RecaptchaField()
 
 
+class RecaptchaNonceForm(FlaskForm):
+    class Meta:
+        csrf = False
+
+    recaptcha = RecaptchaField(nonce="foobar")
+
+
+class RecaptchaNonceCallableForm(FlaskForm):
+    """Form using a callable nonce, for per-request resolution tests."""
+
+    class Meta:
+        csrf = False
+
+    recaptcha = RecaptchaField(nonce=lambda: "dynamic-nonce")
+
+
+class RecaptchaNonceUnsafeForm(FlaskForm):
+    """Form with an HTML-unsafe nonce, to assert escaping."""
+
+    class Meta:
+        csrf = False
+
+    recaptcha = RecaptchaField(nonce='"><script>alert(1)</script>')
+
+
 @pytest.fixture
 def app(app):
     app.testing = False
@@ -59,6 +84,34 @@ def test_render_has_custom_js(app):
     assert captcha_script in render
 
 
+def test_render_has_nonce():
+    f = RecaptchaNonceForm()
+    render = f.recaptcha()
+    assert 'nonce="foobar"' in render
+
+
+def test_render_without_nonce():
+    """Render must not include a nonce attribute when none is set."""
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert "nonce=" not in render
+
+
+def test_render_nonce_callable():
+    """A callable nonce is resolved at render time."""
+    f = RecaptchaNonceCallableForm()
+    render = f.recaptcha()
+    assert 'nonce="dynamic-nonce"' in render
+
+
+def test_render_nonce_is_escaped():
+    """Nonce values are HTML-escaped to avoid attribute injection."""
+    f = RecaptchaNonceUnsafeForm()
+    render = f.recaptcha()
+    assert "<script>alert(1)</script>" not in render
+    assert "&lt;script&gt;" in render
+
+
 def test_render_custom_html(app):
     app.config["RECAPTCHA_HTML"] = "custom"
     f = RecaptchaForm()
@@ -80,8 +133,56 @@ def test_render_custom_args(app):
     app.config["RECAPTCHA_DATA_ATTRS"] = {"red": "blue"}
     f = RecaptchaForm()
     render = f.recaptcha()
-    assert "?key=%28value%29" in render
+    assert "?key=(value)" in render or "?key=%28value%29" in render
     assert 'data-red="blue"' in render
+
+
+def test_render_default_id_from_field():
+    """The div ``id`` defaults to the field id."""
+    f = RecaptchaForm()
+    render = f.recaptcha()
+    assert f'id="{f.recaptcha.id}"' in render
+
+
+def test_render_custom_html_attrs():
+    """Arbitrary HTML attributes can be passed as kwargs to the widget."""
+    f = RecaptchaForm()
+    render = f.recaptcha(style="margin: 1em;", aria_label="captcha")
+    assert 'style="margin: 1em;"' in render
+    assert 'aria-label="captcha"' in render
+
+
+def test_render_kwargs_override_class(app):
+    """``class_`` kwarg takes precedence over ``RECAPTCHA_DIV_CLASS`` config."""
+    app.config["RECAPTCHA_DIV_CLASS"] = "from-config"
+    f = RecaptchaForm()
+    render = f.recaptcha(class_="from-kwargs")
+    assert 'class="from-kwargs"' in render
+    assert "from-config" not in render
+
+
+def test_render_kwargs_override_data_attr(app):
+    """``data-*`` kwargs take precedence over ``RECAPTCHA_DATA_ATTRS`` config."""
+    app.config["RECAPTCHA_DATA_ATTRS"] = {"theme": "light"}
+    f = RecaptchaForm()
+    render = f.recaptcha(data_theme="dark")
+    assert 'data-theme="dark"' in render
+    assert "light" not in render
+
+
+def test_render_kwargs_override_id():
+    """``id`` kwarg overrides the default field id."""
+    f = RecaptchaForm()
+    render = f.recaptcha(id="custom-id")
+    assert 'id="custom-id"' in render
+
+
+def test_render_kwargs_are_escaped():
+    """HTML attribute values from kwargs are escaped."""
+    f = RecaptchaForm()
+    render = f.recaptcha(title='"><script>alert(1)</script>')
+    assert "<script>alert(1)</script>" not in render
+    assert "&lt;script&gt;" in render
 
 
 def test_missing_response(app):

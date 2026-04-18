@@ -10,7 +10,6 @@ from wtforms.validators import DataRequired
 from flask_wtf import FlaskForm
 from flask_wtf.recaptcha import RecaptchaField
 
-
 DEBUG = True
 SECRET_KEY = "secret"
 
@@ -24,7 +23,6 @@ app.config.from_object(__name__)
 
 
 class CommentForm(FlaskForm):
-
     comment = TextAreaField("Comment", validators=[DataRequired()])
     recaptcha = RecaptchaField()
 
@@ -39,7 +37,6 @@ def index(form=None):
 
 @app.route("/add/", methods=("POST",))
 def add_comment():
-
     form = CommentForm()
     if form.validate_on_submit():
         comments = session.pop("comments", [])
