@@ -1,10 +1,10 @@
 Changes
 =======
 
-Version 1.x.x
+Version 1.3.0
 -------------
 
-Unreleased
+Released 2026-04-23
 
 - Don't read the whole uploaded files to know their size. :pr:`635`
 - Stop support for Python 3.9. Start support for Python 3.14. :pr:`648`
