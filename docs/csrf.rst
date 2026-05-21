@@ -115,10 +115,10 @@ Using Axios, configure the default header once at startup:
 Customize the error response
 ----------------------------
 
-When CSRF validation fails, it will raise a :class:`CSRFError`.
-By default this returns a response with the failure reason and a 400 code.
-You can customize the error response using Flask's
-:meth:`~flask.Flask.errorhandler`. ::
+When CSRF validation fails on a request protected by :class:`CSRFProtect`,
+the extension raises a :class:`CSRFError`. By default this returns a response
+with the failure reason and a 400 code. You can customize the error response
+using Flask's :meth:`~flask.Flask.errorhandler`. ::
 
     from flask_wtf.csrf import CSRFError
 
