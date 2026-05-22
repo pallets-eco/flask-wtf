@@ -1,6 +1,14 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- ``FileAllowed`` no longer treats a leading-dot filename like ``".txt"``
+  as a file with the ``txt`` extension. Such names are hidden files with
+  no extension under standard filename conventions
+  (``os.path.splitext('.txt') == ('.txt', '')``). :issue:`465`
+
 Version 1.3.0
 -------------
 

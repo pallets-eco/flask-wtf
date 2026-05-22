@@ -67,6 +67,18 @@ def test_file_allowed(form):
     assert f.file.errors[0] == "File does not have an approved extension: txt"
 
 
+def test_file_allowed_rejects_dot_only_filename(form):
+    """Filenames like '.txt' (no stem) should not be considered to have
+    a '.txt' extension. os.path.splitext('.txt') treats it as the
+    filename of a hidden file, not as an extension — see #465.
+    """
+    form.file.kwargs["validators"] = [FileAllowed(("txt",))]
+
+    f = form(file=FileStorage(filename=".txt"))
+    assert not f.validate()
+    assert f.file.errors[0] == "File does not have an approved extension: txt"
+
+
 def test_file_allowed_uploadset(app, form):
     pytest.importorskip("flask_uploads")
     from flask_uploads import configure_uploads

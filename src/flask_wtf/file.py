@@ -1,3 +1,4 @@
+import os
 from collections import abc
 from io import BytesIO
 from io import SEEK_END
@@ -87,7 +88,11 @@ class FileAllowed:
 
         for filename in filenames:
             if isinstance(self.upload_set, abc.Iterable):
-                if any(filename.endswith("." + x) for x in self.upload_set):
+                # Use os.path.splitext so leading-dot filenames like ".txt"
+                # (a hidden file with no name part) are not mistaken for a
+                # file with the ".txt" extension. See #465.
+                ext = os.path.splitext(filename)[1].lstrip(".")
+                if ext and any(ext == x.lstrip(".").lower() for x in self.upload_set):
                     continue
 
                 raise StopValidation(
