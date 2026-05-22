@@ -1,6 +1,15 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- Fix the reCAPTCHA settings table in ``form.rst``: remove the
+  non-existent ``RECAPTCHA_API_SERVER`` setting and point readers at
+  the full reference in ``config.rst``, which already documents
+  ``RECAPTCHA_SCRIPT``, ``RECAPTCHA_VERIFY_SERVER`` and
+  ``RECAPTCHA_DIV_CLASS``. :issue:`616`
+
 Version 1.3.0
 -------------
 

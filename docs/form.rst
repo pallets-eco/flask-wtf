@@ -152,18 +152,13 @@ Flask-WTF also provides Recaptcha support through a :class:`RecaptchaField`::
         username = TextField('Username')
         recaptcha = RecaptchaField()
 
-This comes with a number of configuration variables, some of which you have to configure.
+``RECAPTCHA_PUBLIC_KEY`` and ``RECAPTCHA_PRIVATE_KEY`` are required.
+The other settings are optional. See :doc:`config` for the full
+reference, including the settings that swap reCAPTCHA for an
+alternative service such as hCaptcha (``RECAPTCHA_SCRIPT``,
+``RECAPTCHA_VERIFY_SERVER``, ``RECAPTCHA_DIV_CLASS``).
 
-======================= ==============================================
-RECAPTCHA_PUBLIC_KEY    **required** A public key.
-RECAPTCHA_PRIVATE_KEY   **required** A private key.
-RECAPTCHA_API_SERVER    **optional** Specify your Recaptcha API server.
-RECAPTCHA_PARAMETERS    **optional** A dict of JavaScript (api.js) parameters.
-RECAPTCHA_DATA_ATTRS    **optional** A dict of data attributes options.
-                        https://developers.google.com/recaptcha/docs/display#javascript_resource_apijs_parameters
-======================= ==============================================
-
-Example of RECAPTCHA_PARAMETERS, and RECAPTCHA_DATA_ATTRS::
+Example of ``RECAPTCHA_PARAMETERS`` and ``RECAPTCHA_DATA_ATTRS``::
 
     RECAPTCHA_PARAMETERS = {'hl': 'zh', 'render': 'explicit'}
     RECAPTCHA_DATA_ATTRS = {'theme': 'dark'}
