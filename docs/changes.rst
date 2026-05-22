@@ -1,6 +1,14 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- ``FlaskForm`` now honours ``meta={"locales": [...]}`` when Flask-Babel
+  is not installed or not initialised on the app, falling back to the
+  WTForms-level translation machinery instead of silently dropping the
+  locale hint. :issue:`582`
+
 Version 1.3.0
 -------------
 

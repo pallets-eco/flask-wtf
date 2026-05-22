@@ -1,7 +1,9 @@
 import pytest
 from flask import request
+from wtforms import EmailField
 from wtforms import StringField
 from wtforms.validators import DataRequired
+from wtforms.validators import Email
 from wtforms.validators import Length
 
 from flask_wtf import FlaskForm
@@ -66,3 +68,28 @@ def test_outside_request():
     sp = "Field must be at least %(min)d character long."
     assert translations.ngettext(ss, sp, 1) == ss
     assert translations.ngettext(ss, sp, 2) == sp
+
+
+def test_meta_locales_respected_without_babel_extension(app, client):
+    """Without Babel(app) initialised, FlaskForm should fall back to
+    WTForms-level translations and honour ``meta={'locales': [...]}``,
+    matching vanilla wtforms behaviour. See #582.
+    """
+
+    class EmailForm(FlaskForm):
+        class Meta:
+            csrf = False
+
+        email = EmailField(validators=[Email()])
+
+    @app.route("/", methods=["POST"])
+    def index():
+        form = EmailForm(meta={"locales": ["fr"]})
+        form.validate()
+        return form.errors
+
+    res = client.post("/", data={"email": "invalid-email"})
+    # Without Babel(app) initialised, the meta locales should still be
+    # honoured by the underlying WTForms translation machinery.
+    assert "Invalid email address." not in res.json["email"]
+    assert "Adresse électronique non valide." in res.json["email"]

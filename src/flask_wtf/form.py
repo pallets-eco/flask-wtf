@@ -64,7 +64,18 @@ class FlaskForm(Form):
             return formdata
 
         def get_translations(self, form):
-            if not current_app.config.get("WTF_I18N_ENABLED", True):
+            # Fall back to WTForms's own translation machinery when:
+            # - the user explicitly opted out via WTF_I18N_ENABLED=False, or
+            # - Flask-Babel is not installed (translations is None), or
+            # - Flask-Babel is installed but the app has not initialised a
+            #   Babel() extension (so there is no locale to read).
+            # In all three cases, returning ``translations`` (the Flask-WTF
+            # wrapper) silently drops ``meta={"locales": [...]}`` — see #582.
+            if (
+                not current_app.config.get("WTF_I18N_ENABLED", True)
+                or translations is None
+                or "babel" not in current_app.extensions
+            ):
                 return super().get_translations(form)
 
             return translations
