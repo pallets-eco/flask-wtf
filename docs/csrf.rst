@@ -66,6 +66,19 @@ The ``name`` attribute must match the ``WTF_CSRF_FIELD_NAME`` setting
 ``Bad Request: CSRF token missing`` error. Change the setting if you need a
 different field name.
 
+Streaming responses send headers before the template is fully iterated.
+If a streamed template is the first place in the request that calls
+``csrf_token()``, the session cookie that stores the raw CSRF token may not be
+sent to the browser. Call :func:`generate_csrf` before returning the streaming
+response so the token is generated while headers can still be modified.
+
+.. sourcecode:: python
+
+    @app.route("/stream-form")
+    def stream_form():
+        generate_csrf()
+        return stream_template("form.html")
+
 HTML Meta Tag
 -------------
 
