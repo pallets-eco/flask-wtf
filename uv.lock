@@ -274,14 +274,14 @@ wheels = [
 
 [[package]]
 name = "flask-reuploaded"
-version = "1.5.0"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flask" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/f7/c80fe59a796f51028fbe145ef154e3b58e85e511cb30499a72e89a64338e/flask_reuploaded-1.5.0.tar.gz", hash = "sha256:e5dc9da2a52e3d72131538388c227212f6130448010e369e24479d226cd66b2d", size = 35096, upload-time = "2026-02-21T08:07:28.849Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/0f/ca570c1223d2f30e883c7e1a13c90e49b5c7b158439917a7cf03f5db1e7f/flask_reuploaded-1.6.0.tar.gz", hash = "sha256:c18910646384281fbcaa2ee7325f3dc68c3278d33ff4cf1f6053716b580954ac", size = 35430, upload-time = "2026-06-06T07:55:43.512Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/fb/30f9763cc8397510d9dfadcd8af5f15e558c83c5a4d301daa9648e531d40/flask_reuploaded-1.5.0-py3-none-any.whl", hash = "sha256:883baf5747586bfa0abd31fda8931aa3319970e18c2400087f98ab79ff9fea4c", size = 15497, upload-time = "2026-02-21T08:07:27.304Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/dd/cf2491d72f3e10bb1ec290494e989cb0bf2aebabbabf5aa72a05a242aaac/flask_reuploaded-1.6.0-py3-none-any.whl", hash = "sha256:0858f79b82c1e5c75965b8bcc886c5abc2119b459fe5e150c4b302413e15cbf2", size = 15569, upload-time = "2026-06-06T07:55:42.027Z" },
 ]
 
 [[package]]
