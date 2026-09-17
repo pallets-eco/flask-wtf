@@ -1,6 +1,14 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- Fix ``FlaskForm`` silently discarding a form's ``meta.locales``-based
+  translations when Flask-Babel isn't installed, instead of falling back to
+  WTForms' own translations as it does when Flask-Babel is installed but
+  ``WTF_I18N_ENABLED`` is set to ``False``. :issue:`582`
+
 Version 1.3.0
 -------------
 

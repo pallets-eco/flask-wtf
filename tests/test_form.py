@@ -128,3 +128,31 @@ def test_set_default_message_language(app, client):
 
     client.post("/default", data={"name": "  "})
     client.post("/es", data={"name": "  "})
+
+
+def test_i18n_falls_back_without_babel(app, client, monkeypatch):
+    # Regression test: with WTF_I18N_ENABLED left at its default (True) but
+    # flask-babel not installed, get_translations() used to unconditionally
+    # return `translations`, which is None in that case -- silently
+    # discarding the form's own `meta.locales`-based translations instead of
+    # falling back to WTForms' own gettext machinery. See flask-wtf#582.
+    import flask_wtf.form
+
+    monkeypatch.setattr(flask_wtf.form, "translations", None)
+
+    @app.route("/", methods=["POST"])
+    def index():
+        class MyBaseForm(FlaskForm):
+            class Meta:
+                csrf = False
+                locales = ["es"]
+
+        class NameForm(MyBaseForm):
+            name = StringField(validators=[DataRequired()])
+
+        form = NameForm()
+        assert app.config.get("WTF_I18N_ENABLED", True)
+        assert not form.validate_on_submit()
+        assert "Este campo es obligatorio." in form.name.errors
+
+    client.post("/", data={"name": "  "})

@@ -64,7 +64,13 @@ class FlaskForm(Form):
             return formdata
 
         def get_translations(self, form):
-            if not current_app.config.get("WTF_I18N_ENABLED", True):
+            if (
+                not current_app.config.get("WTF_I18N_ENABLED", True)
+                or translations is None
+            ):
+                # Fall back to WTForms' own locale-based translations, either
+                # because i18n was explicitly disabled, or because flask-babel
+                # isn't installed and there's nothing Babel-based to return.
                 return super().get_translations(form)
 
             return translations
