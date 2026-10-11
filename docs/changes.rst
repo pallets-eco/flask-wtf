@@ -1,6 +1,14 @@
 Changes
 =======
 
+Version 1.3.1
+-------------
+
+Unreleased
+
+- Preserve the configured captcha container class when passing additional
+  HTML classes to the widget, including from Bootstrap-Flask. :issue:`695`
+
 Version 1.3.0
 -------------
 

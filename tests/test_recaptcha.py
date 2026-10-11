@@ -152,13 +152,34 @@ def test_render_custom_html_attrs():
     assert 'aria-label="captcha"' in render
 
 
-def test_render_kwargs_override_class(app):
-    """``class_`` kwarg takes precedence over ``RECAPTCHA_DIV_CLASS`` config."""
-    app.config["RECAPTCHA_DIV_CLASS"] = "from-config"
+@pytest.mark.parametrize("div_class", [None, "h-captcha"])
+@pytest.mark.parametrize("attribute", ["class", "class_"])
+@pytest.mark.parametrize("extra_class", ["form-control", ""])
+def test_render_preserves_captcha_class(app, div_class, attribute, extra_class):
+    if div_class is not None:
+        app.config["RECAPTCHA_DIV_CLASS"] = div_class
     f = RecaptchaForm()
-    render = f.recaptcha(class_="from-kwargs")
-    assert 'class="from-kwargs"' in render
-    assert "from-config" not in render
+    render = f.recaptcha(**{attribute: extra_class})
+    expected = div_class or "g-recaptcha"
+    if extra_class:
+        expected += f" {extra_class}"
+    assert f'class="{expected}"' in render
+    assert render.count('class="') == 1
+
+
+def test_render_class_alias_precedence(app):
+    app.config["RECAPTCHA_DIV_CLASS"] = "h-captcha"
+    f = RecaptchaForm()
+    render = f.recaptcha(**{"class": "form-control", "class_": "custom"})
+    assert 'class="h-captcha custom"' in render
+    assert render.count('class="') == 1
+
+
+def test_render_class_is_escaped():
+    f = RecaptchaForm()
+    render = f.recaptcha(class_='"><script>alert(1)</script>')
+    assert "<script>alert(1)</script>" not in render
+    assert "&lt;script&gt;" in render
 
 
 def test_render_kwargs_override_data_attr(app):

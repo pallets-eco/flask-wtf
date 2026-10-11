@@ -168,6 +168,20 @@ Example of RECAPTCHA_PARAMETERS, and RECAPTCHA_DATA_ATTRS::
     RECAPTCHA_PARAMETERS = {'hl': 'zh', 'render': 'explicit'}
     RECAPTCHA_DATA_ATTRS = {'theme': 'dark'}
 
+The captcha container uses the ``RECAPTCHA_DIV_CLASS`` configuration
+(default: ``g-recaptcha``). HTML classes passed when rendering the field
+are added to this class, so styling does not remove the class required
+by the captcha provider::
+
+    {{ form.recaptcha(class_="form-control") }}
+
+For hCaptcha, set ``RECAPTCHA_DIV_CLASS = "h-captcha"`` along with the
+appropriate script and verification server settings.
+
+.. versionchanged:: 1.3.1
+    Classes passed to the widget are combined with the configured
+    captcha class instead of replacing it.
+
 For your convenience, when testing your application, if ``app.testing`` is ``True``, the recaptcha
 field will always be valid.
 

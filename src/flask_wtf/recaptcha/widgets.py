@@ -26,11 +26,14 @@ class RecaptchaWidget:
             nonce = nonce()
         nonce_attr = f' nonce="{escape(nonce)}"' if nonce else ""
 
-        kwargs.setdefault(
-            "class",
-            current_app.config.get("RECAPTCHA_DIV_CLASS")
-            or RECAPTCHA_DIV_CLASS_DEFAULT,
-        )
+        classes = [
+            current_app.config.get("RECAPTCHA_DIV_CLASS") or RECAPTCHA_DIV_CLASS_DEFAULT
+        ]
+        for name in ("class", "class_"):
+            value = kwargs.pop(name, None)
+            if value:
+                classes.append(str(value))
+        kwargs["class"] = " ".join(classes)
 
         data_attrs = dict(current_app.config.get("RECAPTCHA_DATA_ATTRS", {}))
         data_attrs["sitekey"] = public_key
@@ -44,7 +47,15 @@ class RecaptchaWidget:
         )
 
     def __call__(self, field, error=None, **kwargs):
-        """Returns the recaptcha input HTML."""
+        """Returns the recaptcha input HTML.
+
+        Additional CSS classes are combined with ``RECAPTCHA_DIV_CLASS``
+        so the captcha provider can still find its container.
+
+        .. versionchanged:: 1.3.1
+            Preserve the configured captcha class when passing HTML
+            classes to the widget.
+        """
 
         if not current_app.config.get("RECAPTCHA_ENABLED", True):
             return Markup("<!-- recaptcha disabled -->")
