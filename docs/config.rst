@@ -32,9 +32,15 @@ Configuration
                            Also set to ``False`` if you want to use WTForms's
                            built-in messages directly, see more info `here`_.
                            Default is ``True``.
+``WTF_CSRF_SIGNER``        Set to a subclass of the `Signer`_ class to use
+                           custom token-signing behavior. Default is the default
+                           for the ``itsdangerous`` library.
+``WTF_CSRF_SIGNER_KWARGS`` Controls the kwargs passed to the Signer class.
+                           Default is ``None``.
 ========================== =====================================================
 
 .. _here: https://wtforms.readthedocs.io/en/stable/i18n.html#using-the-built-in-translations-provider
+.. _Signer: https://itsdangerous.palletsprojects.com/en/stable/signer/
 
 Recaptcha
 ---------

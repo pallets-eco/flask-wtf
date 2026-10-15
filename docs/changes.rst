@@ -1,6 +1,9 @@
 Changes
 =======
 
+- Allow configuration of the CSRF token signer using ``WTF_CSRF_SIGNER`` and
+  ``WTF_CSRF_SIGNER_KWARGS``
+
 Version 1.3.0
 -------------
 

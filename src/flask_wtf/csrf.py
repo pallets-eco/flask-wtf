@@ -49,7 +49,7 @@ def generate_csrf(secret_key=None, token_key=None):
     )
 
     if field_name not in g:
-        s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
+        s = _get_serializer(secret_key)
 
         if field_name not in session:
             session[field_name] = hashlib.sha1(os.urandom(64)).hexdigest()
@@ -104,7 +104,7 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
     if field_name not in session:
         raise ValidationError("The CSRF session token is missing.")
 
-    s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
+    s = _get_serializer(secret_key)
 
     try:
         token = s.loads(data, max_age=time_limit)
@@ -157,6 +157,23 @@ def _get_config(
         raise RuntimeError(message)
 
     return value
+
+
+def _get_serializer(secret_key):
+    """Create and return a Serializer to be used for CSRF tokens.
+
+    :param secret_key: secret key used to sign the token
+    """
+    kwargs = {
+        "salt": "wtf-csrf-token",
+    }
+    if "WTF_CSRF_SIGNER" in current_app.config:
+        kwargs["signer"] = current_app.config["WTF_CSRF_SIGNER"]
+
+    if "WTF_CSRF_SIGNER_KWARGS" in current_app.config:
+        kwargs["signer_kwargs"] = current_app.config["WTF_CSRF_SIGNER_KWARGS"]
+
+    return URLSafeTimedSerializer(secret_key, **kwargs)
 
 
 class _FlaskFormCSRF(CSRF):
@@ -221,6 +238,8 @@ class CSRFProtect:
         app.config.setdefault("WTF_CSRF_META_NAME", "csrf-token")
         app.config.setdefault("WTF_CSRF_TIME_LIMIT", 3600)
         app.config.setdefault("WTF_CSRF_SSL_STRICT", True)
+        app.config.setdefault("WTF_CSRF_SIGNER", None)
+        app.config.setdefault("WTF_CSRF_SIGNER_KWARGS", None)
 
         app.jinja_env.globals["csrf_token"] = generate_csrf
         app.jinja_env.globals["csrf_meta_tag"] = csrf_meta_tag
