@@ -1,9 +1,24 @@
 version: 2
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: monthly
 updates:
-- package-ecosystem: "github-actions"
-  directory: "/"
-  schedule:
-    interval: "monthly"
-    day: "monday"
-    time: "16:00"
-    timezone: "UTC"
+  - package-ecosystem: github-actions
+    directory: /
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+  - package-ecosystem: pre-commit
+    directory: /
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
