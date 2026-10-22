@@ -18,9 +18,10 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "Flask",
-    "WTForms",
-    "itsdangerous",
+    "Flask>=3.0",
+    "Werkzeug>=3.0",
+    "WTForms>=3.0",
+    "itsdangerous>=2.1.2",
 ]
 dynamic = ["version"]
 
@@ -36,7 +37,7 @@ email = ["email_validator"]
 
 [dependency-groups]
 test = [
-    "pytest",
+    "pytest>=8",
 ]
 test-babel = [
     "Flask-Babel",

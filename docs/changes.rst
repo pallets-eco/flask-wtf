@@ -1,6 +1,14 @@
 Changes
 =======
 
+Version 1.4.0
+-------------
+
+Unreleased
+
+- Require Flask >= 3.0, Werkzeug >= 3.0, WTForms >= 3.0 and
+  ItsDangerous >= 2.1.2.
+
 Version 1.3.0
 -------------
 
