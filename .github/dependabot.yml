@@ -3,6 +3,9 @@ multi-ecosystem-groups:
   dependencies:
     schedule:
       interval: monthly
+    commit-message:
+      prefix: chore
+      include: scope
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -10,15 +13,9 @@ updates:
     multi-ecosystem-group: dependencies
     cooldown:
       default-days: 7
-    commit-message:
-      prefix: chore
-      include: scope
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: dependencies
     cooldown:
       default-days: 7
-    commit-message:
-      prefix: chore
-      include: scope
